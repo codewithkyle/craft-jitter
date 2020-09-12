@@ -1,0 +1,44 @@
+{
+    "name": "codewithkyle/jitit",
+    "description": "A just in time image transformation service.",
+    "type": "craft-plugin",
+    "version": "1.0.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "jitit"
+    ],
+    "support": {
+        "docs": "https://github.com/codewithkyle/craft-jitit/blob/master/README.md",
+        "issues": "https://github.com/codewithkyle/craft-jitit/issues"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Kyle Andrews",
+            "homepage": "https://kyleandrews.dev/"
+        }
+    ],
+    "require": {
+        "craftcms/cms": "^3.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+          "codewithkyle\\jitit\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "JITIT",
+        "handle": "jitit",
+        "developer": "Kyle Andrews",
+        "developerUrl": "https://kyleandrews.dev/",
+        "documentationUrl": "https://github.com/codewithkyle/craft-jitit/blob/master/README.md",
+        "changelogUrl": "https://raw.githubusercontent.com/codewithkyle/craft-jitit/master/CHANGELOG.md",
+        "components": {
+            "transform": "codewithkyle\\jitit\\services\\Transform"
+        },
+        "class": "codewithkyle\\jitit\\JITIT"
+    }
+}
