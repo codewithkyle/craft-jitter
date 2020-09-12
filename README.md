@@ -1,6 +1,6 @@
-# JITIT plugin for Craft CMS 3.x
+# Just In Time Image Transformations
 
-A just in time image transformation service. The API is loosly based on [Imgix](https://docs.imgix.com/apis/url). This plugin was created to be a simple and free alternative to an Imgix type service, it does not and will not have all the bells and whisles. If you need something a bit more advanced than transforming images widths, heights, formats, and aspect ratios I suggest you look into paying for [Imgix](https://www.imgix.com/pricing) or [Imager X](https://plugins.craftcms.com/imager-x).
+JITIT is a just in time image transformation plugin for Craft CMS. The API is based on [Imgix](https://docs.imgix.com/apis/url). This plugin was created to be a simple and free alternative to an Imgix style service. It **does not and will not** have all the bells and whisles that other paid services/plugins offer. If you need something a bit more advanced besides basic image transformations I suggest you pay for [Imgix](https://www.imgix.com/pricing) or [Imager X](https://plugins.craftcms.com/imager-x).
 
 ## Requirements
 
@@ -22,7 +22,22 @@ To install the plugin, follow these instructions.
 
 ## Configuring JITIT
 
-JITIT can be configured to use an S3 bucket, go to the plugin settings page for configuration requirements.
+JITIT can be configured by adding a `jitit.php` file to your projects `config/` directory.
+
+```php
+<?php
+
+return [
+        'imageUrl' => 'http://s3-us-east-2.amazonaws.com/transformed-images/',
+        'accessKey' => getenv("S3_PUBLIC_KEY"),
+        'secretAccessKey' => getenv("S3_PRIVATE_KEY"),
+        'region' => 'us-east-2',
+        'bucket' => 'bucket-name',
+        'folder' => 'transformed-images',
+        'requestHeaders' => array(),
+        'storageType' => 'standard',
+];
+```
 
 ## Using JITIT
 
