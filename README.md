@@ -44,7 +44,17 @@ return [
 Requesting an image transformation via API:
 
 ```
-/jiti/transform/image?id=1w=768&ar=16:9
+/actions/jitit/transform/image?id=1w=768&ar=16:9
+```
+
+API response:
+
+```typescript
+interface {
+        success: boolean;
+        error: string;
+        url: string;
+}
 ```
 
 Requesting an image transformation via Twig:
@@ -60,13 +70,15 @@ Image transformations require the follow parameters:
 
 Optional transformation parameters:
 
-| Parameter     | Default                  | Description               | Valid options                       |
-| ------------- |:------------------------:|:-------------------------:|------------------------------------:|
-| `w`           | base image width         | desired image width       | `number`                            |
-| `h`           | base image height        | desired image height      | `number`                            |
-| `ar`          | base image aspect ratio  | desired aspect ratio      | `number:number`                     |
-| `fm`          | `auto`                   | desired image format      | `jpg`, `png`, `webp`, `gif`, `auto` |
-| `q`           | `80`                     | desired image quality     | `0` to `100`                        |
+| Parameter     | Default                  | Description                     | Valid options                       |
+| ------------- | ------------------------ | ------------------------------- | ----------------------------------- |
+| `w`           | base image width         | desired image width             | `number`                            |
+| `h`           | base image height        | desired image height            | `number`                            |
+| `ar`          | base image aspect ratio  | desired aspect ratio            | `number:number`                     |
+| `fm`          | `auto`                   | desired image format            | `jpg`, `png`, `webp`, `gif`, `auto` |
+| `q`           | `80`                     | desired image quality           | `0` to `100`                        |
+| `m`           | `crop`                   | how the image should be resized | `crop`, `fit`, `letterbox`          |
+| `bg`          | `#ffffff`                | letterbox background color      | `hex`                               |
 
 ## JITIT Roadmap
 

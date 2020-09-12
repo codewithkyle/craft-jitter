@@ -12,7 +12,6 @@ namespace codewithkyle\jitit;
 
 use codewithkyle\jitit\services\Transform as TransformService;
 use codewithkyle\jitit\variables\JITITVariable;
-use codewithkyle\jitit\models\Settings;
 use codewithkyle\jitit\utilities\JITITUtility as JITITUtilityUtility;
 
 use Craft;
@@ -73,7 +72,7 @@ class JITIT extends Plugin
      *
      * @var bool
      */
-    public $hasCpSettings = true;
+    public $hasCpSettings = false;
 
     /**
      * Set to `true` if the plugin should have its own section (main nav item) in the control panel.
@@ -101,24 +100,6 @@ class JITIT extends Plugin
         parent::init();
         self::$plugin = $this;
 
-        // Register our site routes
-        Event::on(
-            UrlManager::class,
-            UrlManager::EVENT_REGISTER_SITE_URL_RULES,
-            function (RegisterUrlRulesEvent $event) {
-                $event->rules['siteActionTrigger1'] = 'jitit/transform';
-            }
-        );
-
-        // Register our CP routes
-        Event::on(
-            UrlManager::class,
-            UrlManager::EVENT_REGISTER_CP_URL_RULES,
-            function (RegisterUrlRulesEvent $event) {
-                $event->rules['cpActionTrigger1'] = 'jitit/transform/do-something';
-            }
-        );
-
         // Register our utilities
         Event::on(
             Utilities::class,
@@ -135,7 +116,7 @@ class JITIT extends Plugin
             function (Event $event) {
                 /** @var CraftVariable $variable */
                 $variable = $event->sender;
-                $variable->set('jITIT', JITITVariable::class);
+                $variable->set('jitit', JITITVariable::class);
             }
         );
 
@@ -175,35 +156,6 @@ class JITIT extends Plugin
                 ['name' => $this->name]
             ),
             __METHOD__
-        );
-    }
-
-    // Protected Methods
-    // =========================================================================
-
-    /**
-     * Creates and returns the model used to store the plugin’s settings.
-     *
-     * @return \craft\base\Model|null
-     */
-    protected function createSettingsModel()
-    {
-        return new Settings();
-    }
-
-    /**
-     * Returns the rendered settings HTML, which will be inserted into the content
-     * block on the settings page.
-     *
-     * @return string The rendered settings HTML
-     */
-    protected function settingsHtml(): string
-    {
-        return Craft::$app->view->renderTemplate(
-            'jitit/settings',
-            [
-                'settings' => $this->getSettings()
-            ]
         );
     }
 }

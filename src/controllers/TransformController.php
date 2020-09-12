@@ -46,34 +46,23 @@ class TransformController extends Controller
      *         The actions must be in 'kebab-case'
      * @access protected
      */
-    protected $allowAnonymous = ['index', 'do-something'];
+    protected $allowAnonymous = ['image'];
 
     // Public Methods
     // =========================================================================
 
-    /**
-     * Handle a request going to our plugin's index action URL,
-     * e.g.: actions/jitit/transform
-     *
-     * @return mixed
-     */
-    public function actionIndex()
+    public function actionImage()
     {
-        $result = 'Welcome to the TransformController actionIndex() method';
-
-        return $result;
-    }
-
-    /**
-     * Handle a request going to our plugin's actionDoSomething URL,
-     * e.g.: actions/jitit/transform/do-something
-     *
-     * @return mixed
-     */
-    public function actionDoSomething()
-    {
-        $result = 'Welcome to the TransformController actionDoSomething() method';
-
-        return $result;
+        $request = Craft::$app->getRequest();
+        $params = $request->getQueryParams();
+        $response = JITIT::getInstance()->transform->transformImage($params);
+        if ($response['success'])
+        {
+            return $response;
+        }
+        else
+        {
+            return Craft::$app->getResponse()->setStatusCode(404);
+        }
     }
 }
