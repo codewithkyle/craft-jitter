@@ -82,13 +82,13 @@ class Transform extends Component
             ]);
         }
 
-        $helper = new \craft\helpers\StringHelper();
-        $uid = str_replace('-', '', $helper->UUID());
         preg_match("/(\..*)$/", $asset->filename, $matches);
-        $baseType = $matches[0];
+        $baseType = strtolower(ltrim($matches[0], "."));
 
+        // Build transform details
         $transform = $this->getImageTransformSettings($params, $masterImage);
-        $filename = preg_replace("/(\..*)$/", '', $asset->filename) . '-' . $transform['width'] . '-' . $transform['height'];
+        $uid = $this->buildTransformUid($transform);
+        $filename = preg_replace("/(\..*)$/", '', $asset->filename) . '-' . $uid;
 
         // Quickly respond with existing files
         if ($s3)
@@ -99,7 +99,7 @@ class Transform extends Component
                 $uri = preg_replace("/.*\//", '', $uri);
                 if (isset($settings['folder']))
                 {
-                    $uri = trim($settings['folder'], "/") . '/' . ltrim($uri, "/");
+                    $uri = trim($settings['folder'], "/") . "/"  . ltrim($uri, "/");
                 }
                 $response['url'] = $s3->getObjectUrl($settings['bucket'], $uri);
                 $response['type'] = 'external';
@@ -110,7 +110,7 @@ class Transform extends Component
         {
             $existingFile = $this->findExistingFile(Yii::getAlias('@webroot'), $filename, $transform['format'], $clientAcceptsWebp);
             if ($existingFile){
-                $cleanName = "/" . str_replace('\\', '/', $existingFile);
+                $cleanName = DIRECTORY_SEPARATOR . str_replace('\\', '/', $existingFile);
                 $cleanName = preg_replace("/.*\//", '', $cleanName);
                 $response['url'] = "/jitit/" . $cleanName;
                 $response['type'] = 'local';
@@ -119,7 +119,7 @@ class Transform extends Component
         }
 
         // Do the thing
-        $tempImage = $this->transform($masterImage, $baseType, $uid, $transform);
+        $tempImage = $this->transform($masterImage, $baseType, $transform);
         $finalImage = $this->convertImage($tempImage, $filename, $baseType, $clientAcceptsWebp, $transform);
 
         // Save the output
@@ -131,7 +131,7 @@ class Transform extends Component
             $uri = preg_replace("/.*\//", '', $uri);
             if (isset($settings['folder']))
             {
-                $uri = trim($settings['folder'], "/") . '/' . ltrim($uri, "/");
+                $uri = trim($settings['folder'], "/") . "/" . ltrim($uri, "/");
             }
             $s3Response = $s3->putObject([
                 'Bucket' => $settings['bucket'],
@@ -144,7 +144,7 @@ class Transform extends Component
             {
                 mkdir($jititCachePath);
             }
-            touch(FileHelper::normalizePath($jititCachePath . '/' . $filename. $finalImageType));
+            touch(FileHelper::normalizePath($jititCachePath . DIRECTORY_SEPARATOR . $filename. $finalImageType));
             $response['url'] = $s3Response['ObjectURL'];
             $response['type'] = 'external';
         }
@@ -155,9 +155,9 @@ class Transform extends Component
             {
                 mkdir($publicPath);
             }
-            $cleanName = "/" . str_replace('\\', '/', $finalImage);
+            $cleanName = DIRECTORY_SEPARATOR . str_replace('\\', '/', $finalImage);
             $cleanName = preg_replace("/.*\//", '', $cleanName);
-            copy($finalImage, FileHelper::normalizePath($publicPath. "/" . $cleanName));
+            copy($finalImage, FileHelper::normalizePath($publicPath. DIRECTORY_SEPARATOR  . $cleanName));
             $response['url'] = "/jitit/" . $cleanName;
             $response['type'] = 'local';
         }
@@ -166,6 +166,12 @@ class Transform extends Component
         unlink($finalImage);
 
         return $response;
+    }
+
+    private function buildTransformUid(array $transform): string
+    {
+        $key = $transform['width'] . "-" . $transform['height'] . "-" . $transform['focusPoint'][0] . "-" . $transform['focusPoint'][1] . "-" . $transform["quality"] . "-" . $transform['background'] . "-" . $transform['mode'];
+        return \md5($key);
     }
 
     private function findExistingFile(string $path, string $filename, string $format, bool $clientAcceptsWebp)
@@ -213,19 +219,19 @@ class Transform extends Component
             case "jpg":
                 $img->setImageFormat("jpeg");
                 $img->setImageCompressionQuality($transform['quality']);
-                $finalImage = $tempPath . "/" . $filename . ".jpg";
+                $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".jpg";
                 $img->writeImage($finalImage);
                 break;
             case "gif":
                 $img->setImageFormat("gif");
                 $img->setImageCompressionQuality($transform['quality']);
-                $finalImage = $tempPath . "/" . $filename . ".gif";
+                $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".gif";
                 $img->writeImage($finalImage);
                 break;
             case "png":
                 $img->setImageFormat("png");
                 $img->setImageCompressionQuality($transform['quality']);
-                $finalImage = $tempPath . "/" . $filename . ".png";
+                $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".png";
                 $img->writeImage($finalImage);
                 break;
             default:
@@ -235,12 +241,12 @@ class Transform extends Component
                     {
                         $img->setImageFormat("webp");
                         $img->setImageCompressionQuality($transform['quality']);
-                        $finalImage = $tempPath . "/" . $filename . ".webp";
+                        $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".webp";
                         $img->writeImage($finalImage);
                     }
                     else if (file_exists("/usr/bin/cwebp"))
                     {
-                        $finalImage = $tempPath . "/" . $filename . '.webp';
+                        $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . '.webp';
                         $command = escapeshellcmd("/usr/bin/cwebp -q " . $transform['quality'] . " " . $tempImage . " -o " . $finalImage);
                         shell_exec($command);
                     }
@@ -252,25 +258,25 @@ class Transform extends Component
                         case "jpg":
                             $img->setImageFormat("jpeg");
                             $img->setImageCompressionQuality($transform['quality']);
-                            $finalImage = $tempPath . "/" . $filename . ".jpg";
+                            $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".jpg";
                             $img->writeImage($finalImage);
                             break;
                         case "jpeg":
                             $img->setImageFormat("jpeg");
                             $img->setImageCompressionQuality($transform['quality']);
-                            $finalImage = $tempPath . "/" . $filename . ".jpg";
+                            $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".jpg";
                             $img->writeImage($finalImage);
                             break;
                         case "gif":
                             $img->setImageFormat("gif");
                             $img->setImageCompressionQuality($transform['quality']);
-                            $finalImage = $tempPath . "/" . $filename . ".gif";
+                            $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".gif";
                             $img->writeImage($finalImage);
                         break;
                         default:
                             $img->setImageFormat("png");
                             $img->setImageCompressionQuality($transform['quality']);
-                            $finalImage = $tempPath . "/" . $filename . ".png";
+                            $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".png";
                             $img->writeImage($finalImage);
                             break;
                     }
@@ -281,8 +287,10 @@ class Transform extends Component
         return $finalImage;
     }
 
-    private function transform(string $path, string $baseType, string $uid, array $transform): string
+    private function transform(string $path, string $baseType, array $transform): string
     {
+        $helper = new \craft\helpers\StringHelper();
+        $uid = str_replace('-', '', $helper->UUID());
         $img = new Imagick($path);
         $leftPos = floor($img->getImageWidth() * $transform['focusPoint'][0]) - floor($transform['width'] / 2);
         $topPos = floor($img->getImageHeight() * $transform['focusPoint'][1]) - floor($transform['height'] / 2);
@@ -292,25 +300,34 @@ class Transform extends Component
             case "fit":
                 $img->thumbnailImage($transform['width'], $transform['height'], false, false);
                 $tempPath = Craft::$app->path->tempPath;
-                $tempImage = $tempPath . "/" . $uid . $baseType;
+                $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
                 $img->writeImage($tempImage);
                 break;
             case "letterbox":
                 $img->setImageBackgroundColor('#' . $transform['background']);
                 $img->thumbnailImage($transform['width'], $transform['height'], true, true);
                 $tempPath = Craft::$app->path->tempPath;
-                $tempImage = $tempPath . "/" . $uid . $baseType;
+                $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
                 $img->writeImage($tempImage);
                 break;
             default:
                 $tempPath = Craft::$app->path->tempPath;
-                $tempImage = $tempPath . "/" . $uid . $baseType;
+                $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
                 $img->writeImage($tempImage);
                 $cropedImage = imagecreatetruecolor($transform['width'], $transform['height']);
                 $srcImage = imagecreatefromjpeg($tempImage);
                 \imagecopyresampled($cropedImage, $srcImage, 0, 0, $leftPos, $topPos, $transform['width'], $transform['height'], $transform['width'], $transform['height']);
-                \imagejpeg($cropedImage, $tempImage, 100);
-                break;
+                switch($baseType){
+                    case "png":
+                        \imagepng($cropedImage, $tempImage, 9);
+                        break;
+                    case "gif":
+                        \imagegif($cropedImage, $tempImage);
+                        break;
+                    default:
+                        \imagejpeg($cropedImage, $tempImage, 100);
+                        break;
+                }
         }
 
         return $tempImage;
