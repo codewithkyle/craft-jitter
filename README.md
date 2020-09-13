@@ -85,4 +85,5 @@ Optional transformation parameters:
 - [x] Add AWS S3 bucket support
 - [ ] Add focus point parameters
 - [ ] Add GD support
+- [ ] Add cache clearing functionality
 - [ ] Initial release

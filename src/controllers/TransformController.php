@@ -59,7 +59,14 @@ class TransformController extends Controller
         $response = JITIT::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
         if ($response['success'])
         {
-            return $this->asJson($response);
+            if ($response['type'] == 'external')
+            {
+                return Craft::$app->getResponse()->redirect($response['url']);
+            }
+            else
+            {
+                return Craft::$app->getResponse()->redirect($response['url']);
+            }
         }
         else
         {

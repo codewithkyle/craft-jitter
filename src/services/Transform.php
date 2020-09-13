@@ -45,6 +45,7 @@ class Transform extends Component
             'success' => true,
             'error' => null,
             'url' => null,
+            'type' => null,
         ];
         
         $masterImage = null;
@@ -101,6 +102,7 @@ class Transform extends Component
                     $uri = trim($settings['folder'], "/") . '/' . ltrim($uri, "/");
                 }
                 $response['url'] = $s3->getObjectUrl($settings['bucket'], $uri);
+                $response['type'] = 'external';
                 return $response;
             }
         }
@@ -111,6 +113,7 @@ class Transform extends Component
                 $cleanName = "/" . str_replace('\\', '/', $existingFile);
                 $cleanName = preg_replace("/.*\//", '', $cleanName);
                 $response['url'] = "/jitit/" . $cleanName;
+                $response['type'] = 'local';
                 return $response;
             }
         }
@@ -143,6 +146,7 @@ class Transform extends Component
             }
             touch(FileHelper::normalizePath($jititCachePath . '/' . $filename. $finalImageType));
             $response['url'] = $s3Response['ObjectURL'];
+            $response['type'] = 'external';
         }
         else
         {
@@ -155,6 +159,7 @@ class Transform extends Component
             $cleanName = preg_replace("/.*\//", '', $cleanName);
             copy($finalImage, FileHelper::normalizePath($publicPath. "/" . $cleanName));
             $response['url'] = "/jitit/" . $cleanName;
+            $response['type'] = 'local';
         }
 
         unlink($tempImage);
