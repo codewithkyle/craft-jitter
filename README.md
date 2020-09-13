@@ -68,7 +68,7 @@ Transformation parameters:
 | `ar`          | base image aspect ratio  | desired aspect ratio            | `int:int`                              |
 | `fm`          | `auto`                   | desired image format            | `jpg`, `png`, `gif`, `auto`            |
 | `q`           | `80`                     | desired image quality           | `0` to `100`                           |
-| `m`           | `crop`                   | how the image should be resized | `crop`, `croponly`, `fit`, `letterbox` |
+| `m`           | `clip`                   | how the image should be resized | `crop`, `clip`, `fit`, `letterbox`     |
 | `bg`          | `ffffff`                 | letterbox background color      | `hex`                                  |
 | `fp-x`        | `0.5`                    | horizontal focus point          | `0` to `1`                             |
 | `fp-y`        | `0.5`                    | vertical focus point            | `0` to `1`                             |
@@ -83,6 +83,5 @@ The `auto` format will return a `webp` image when the server can generated the f
 - [x] Add AWS S3 bucket support
 - [x] Add focus point parameters
 - [ ] Add `srcset()` functionality
-- [ ] Add GD support
 - [ ] Add cache clearing functionality
 - [ ] Initial release
