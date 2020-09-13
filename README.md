@@ -57,7 +57,7 @@ interface {
 Requesting an image transformation via Twig:
 
 ```twig
-{% set image = craft.jitit.transformImage(entry.image[0], { w: 768, ar: 16/9 }) %}
+{% set image = craft.jitit.transformImage(entry.image[0], { w: 768, ar: 16/9, m: "resize", fm: "gif", q: 100 }) %}
 <img src="{{ image.url }}" />
 ```
 
@@ -69,9 +69,9 @@ Optional transformation parameters:
 
 | Parameter     | Default                  | Description                     | Valid options                       |
 | ------------- | ------------------------ | ------------------------------- | ----------------------------------- |
-| `w`           | base image width         | desired image width             | `number`                            |
-| `h`           | base image height        | desired image height            | `number`                            |
-| `ar`          | base image aspect ratio  | desired aspect ratio            | `number:number`                     |
+| `w`           | base image width         | desired image width             | `int`                               |
+| `h`           | base image height        | desired image height            | `int`                               |
+| `ar`          | base image aspect ratio  | desired aspect ratio            | `int:int`                           |
 | `fm`          | `auto`                   | desired image format            | `jpg`, `png`, `gif`, `auto`         |
 | `q`           | `80`                     | desired image quality           | `0` to `100`                        |
 | `m`           | `crop`                   | how the image should be resized | `crop`, `fit`, `letterbox`          |
