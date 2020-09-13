@@ -44,16 +44,6 @@ Requesting an image transformation through the API:
 /actions/jitit/transform/image?id=1w=768&ar=16:9
 ```
 
-API response:
-
-```typescript
-interface {
-    success: boolean;
-    error: string;
-    url: string;
-}
-```
-
 Requesting an image transformation via Twig:
 
 ```twig
@@ -76,6 +66,7 @@ Optional transformation parameters:
 
 | Parameter     | Default                  | Description                     | Valid options                       |
 | ------------- | ------------------------ | ------------------------------- | ----------------------------------- |
+| `id`          | `null`                   | the image asset id (required)   | `int`                               |
 | `w`           | base image width         | desired image width             | `int`                               |
 | `h`           | base image height        | desired image height            | `int`                               |
 | `ar`          | base image aspect ratio  | desired aspect ratio            | `int:int`                           |
