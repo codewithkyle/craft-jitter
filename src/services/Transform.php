@@ -291,24 +291,48 @@ class Transform extends Component
     {
         $helper = new \craft\helpers\StringHelper();
         $uid = str_replace('-', '', $helper->UUID());
+
         $img = new Imagick($path);
+        $img->setImageCompression(Imagick::COMPRESSION_NO);
+        $img->setImageCompressionQuality(100);
+        $img->setOption('png:compression-level', 9);
+        
         $leftPos = floor($img->getImageWidth() * $transform['focusPoint'][0]) - floor($transform['width'] / 2);
         $topPos = floor($img->getImageHeight() * $transform['focusPoint'][1]) - floor($transform['height'] / 2);
 
         switch ($transform['mode'])
         {
             case "fit":
-                $img->thumbnailImage($transform['width'], $transform['height'], false, false);
+                $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
                 $tempPath = Craft::$app->path->tempPath;
                 $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
                 $img->writeImage($tempImage);
                 break;
             case "letterbox":
                 $img->setImageBackgroundColor('#' . $transform['background']);
-                $img->thumbnailImage($transform['width'], $transform['height'], true, true);
+                $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
                 $tempPath = Craft::$app->path->tempPath;
                 $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
                 $img->writeImage($tempImage);
+                break;
+            case "croponly":
+                $tempPath = Craft::$app->path->tempPath;
+                $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
+                $img->writeImage($tempImage);
+                $cropedImage = imagecreatetruecolor($transform['width'], $transform['height']);
+                $srcImage = imagecreatefromjpeg($tempImage);
+                \imagecopyresampled($cropedImage, $srcImage, 0, 0, $leftPos, $topPos, $transform['width'], $transform['height'], $transform['width'], $transform['height']);
+                switch($baseType){
+                    case "png":
+                        \imagepng($cropedImage, $tempImage, 9);
+                        break;
+                    case "gif":
+                        \imagegif($cropedImage, $tempImage);
+                        break;
+                    default:
+                        \imagejpeg($cropedImage, $tempImage, 100);
+                        break;
+                }
                 break;
             default:
                 $tempPath = Craft::$app->path->tempPath;

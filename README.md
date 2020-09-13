@@ -58,24 +58,22 @@ Requesting an image transformation via Twig:
 />
 ```
 
-Image transformations require the follow parameters:
+Transformation parameters:
 
-1. `id` - the asset id
+| Parameter     | Default                  | Description                     | Valid options                          |
+| ------------- | ------------------------ | ------------------------------- | -------------------------------------- |
+| `id`          | `null`                   | the image asset id (required)   | `int`                                  |
+| `w`           | base image width         | desired image width             | `int`                                  |
+| `h`           | base image height        | desired image height            | `int`                                  |
+| `ar`          | base image aspect ratio  | desired aspect ratio            | `int:int`                              |
+| `fm`          | `auto`                   | desired image format            | `jpg`, `png`, `gif`, `auto`            |
+| `q`           | `80`                     | desired image quality           | `0` to `100`                           |
+| `m`           | `crop`                   | how the image should be resized | `crop`, `croponly`, `fit`, `letterbox` |
+| `bg`          | `ffffff`                 | letterbox background color      | `hex`                                  |
+| `fp-x`        | `0.5`                    | horizontal focus point          | `0` to `1`                             |
+| `fp-y`        | `0.5`                    | vertical focus point            | `0` to `1`                             |
 
-Optional transformation parameters:
-
-| Parameter     | Default                  | Description                     | Valid options                       |
-| ------------- | ------------------------ | ------------------------------- | ----------------------------------- |
-| `id`          | `null`                   | the image asset id (required)   | `int`                               |
-| `w`           | base image width         | desired image width             | `int`                               |
-| `h`           | base image height        | desired image height            | `int`                               |
-| `ar`          | base image aspect ratio  | desired aspect ratio            | `int:int`                           |
-| `fm`          | `auto`                   | desired image format            | `jpg`, `png`, `gif`, `auto`         |
-| `q`           | `80`                     | desired image quality           | `0` to `100`                        |
-| `m`           | `crop`                   | how the image should be resized | `crop`, `fit`, `letterbox`          |
-| `bg`          | `ffffff`                 | letterbox background color      | `hex`                               |
-| `fp-x`        | `0.5`                    | horizontal focus point          | `0` to `1`                          |
-| `fp-y`        | `0.5`                    | vertical focus point            | `0` to `1`                          |
+The `auto` format will return a `webp` image when the server can generated the format and clients browser supports the format.
 
 ## JITIT Roadmap
 
