@@ -57,8 +57,15 @@ interface {
 Requesting an image transformation via Twig:
 
 ```twig
-{% set image = craft.jitit.transformImage(entry.image[0], { w: 768, ar: 16/9, m: "resize", fm: "gif", q: 100 }) %}
-<img src="{{ image.url }}" />
+{% set transformedImageUrl = craft.jitit.transformImage(entry.image[0], { w: 150, ar: 1/1, m: "resize", fm: "gif", q: 10 }) %}
+<img 
+    src="{{ transformedImageUrl }}" 
+    srcset="{{ craft.jitit.srcset(entry.image[0], [
+        { w: 300, height: 250, },
+        { w: 768, ar: 16/9, },
+        { w: 1024, ar: 16/9, },
+    ]) }}" 
+/>
 ```
 
 Image transformations require the follow parameters:
@@ -84,6 +91,7 @@ Optional transformation parameters:
 - [x] Create image transformation twig variable
 - [x] Add AWS S3 bucket support
 - [ ] Add focus point parameters
+- [ ] Add `srcset()` functionality
 - [ ] Add GD support
 - [ ] Add cache clearing functionality
 - [ ] Initial release
