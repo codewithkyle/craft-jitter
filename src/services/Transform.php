@@ -307,7 +307,7 @@ class Transform extends Component
                 break;
             case "letterbox":
                 $img->setImageBackgroundColor('#' . $transform['background']);
-                $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
+                $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75, true);
                 $tempPath = Craft::$app->path->tempPath;
                 $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
                 $img->writeImage($tempImage);
@@ -389,21 +389,10 @@ class Transform extends Component
             $quality = intval($params['q']);
         }
 
-        $mode = 'crop';
+        $mode = 'clip';
         if (isset($params['m']))
         {
             $mode = $params['m'];
-        }
-        if ($mode == 'crop')
-        {
-            if ($width > $img->getImageWidth())
-            {
-                $width = $img->getImageWidth();
-            }
-            if ($height > $img->getImageHeight())
-            {
-                $height = $img->getImageHeight();
-            }
         }
 
         $bg = 'ffffff';
@@ -416,10 +405,26 @@ class Transform extends Component
         if (isset($params['fp-x']))
         {
             $focusPoints[0] = floatval($params['fp-x']);
+            if ($focusPoints[0] < 0)
+            {
+                $focusPoints[0] = 0;
+            }
+            if ($focusPoints[0] > 1)
+            {
+                $focusPoints[0] = 1;
+            }
         }
         if (isset($params['fp-y']))
         {
             $focusPoints[1] = floatval($params['fp-y']);
+            if ($focusPoints[1] < 0)
+            {
+                $focusPoints[1] = 0;
+            }
+            if ($focusPoints[1] > 1)
+            {
+                $focusPoints[1] = 1;
+            }
         }
 
         $transform = [
