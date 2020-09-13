@@ -83,5 +83,6 @@ Optional transformation parameters:
 - [x] Create image transformation service
 - [x] Create image transformation twig variable
 - [x] Add AWS S3 bucket support
-- [ ] Initial release
+- [ ] Add focus point parameters
 - [ ] Add GD support
+- [ ] Initial release
