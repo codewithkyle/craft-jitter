@@ -1,6 +1,6 @@
 <?php
 /**
- * JITIT plugin for Craft CMS 3.x
+ * Jitter plugin for Craft CMS 3.x
  *
  * A just in time image transformation service.
  *
@@ -8,10 +8,10 @@
  * @copyright Copyright (c) 2020 Kyle Andrews
  */
 
-namespace codewithkyle\jitit;
+namespace codewithkyle\jitter;
 
-use codewithkyle\jitit\services\Transform as TransformService;
-use codewithkyle\jitit\variables\JITITVariable;
+use codewithkyle\jitter\services\Transform as TransformService;
+use codewithkyle\jitter\variables\JitterVariable;
 
 use Craft;
 use craft\base\Plugin;
@@ -39,23 +39,23 @@ use yii\base\Event;
  * https://docs.craftcms.com/v3/extend/
  *
  * @author    Kyle Andrews
- * @package   JITIT
+ * @package   Jitter
  * @since     1.0.0
  *
  * @property  TransformService $transform
  * @property  Settings $settings
  * @method    Settings getSettings()
  */
-class JITIT extends Plugin
+class Jitter extends Plugin
 {
     // Static Properties
     // =========================================================================
 
     /**
      * Static property that is an instance of this plugin class so that it can be accessed via
-     * JITIT::$plugin
+     * Jitter::$plugin
      *
-     * @var JITIT
+     * @var Jitter
      */
     public static $plugin;
 
@@ -88,7 +88,7 @@ class JITIT extends Plugin
 
     /**
      * Set our $plugin static property to this class so that it can be accessed via
-     * JITIT::$plugin
+     * Jitter::$plugin
      *
      * Called after the plugin class is instantiated; do any one-time initialization
      * here such as hooks and events.
@@ -109,23 +109,23 @@ class JITIT extends Plugin
             function (Event $event) {
                 /** @var CraftVariable $variable */
                 $variable = $event->sender;
-                $variable->set('jitit', JITITVariable::class);
+                $variable->set('jitter', JitterVariable::class);
             }
         );
 
         Event::on(ClearCaches::class, ClearCaches::EVENT_REGISTER_CACHE_OPTIONS,
             function (RegisterCacheOptionsEvent $event) {
                 $event->options[] = [
-                    'key' => 'jitit-transform-cache',
-                    'label' => Craft::t('jitit', 'Transformed images'),
+                    'key' => 'jitter-transform-cache',
+                    'label' => Craft::t('jitter', 'Transformed images'),
                     'action' => function() {
-                        $s3MasterCache = FileHelper::normalizePath(Craft::$app->path->runtimePath . "/jitit");
+                        $s3MasterCache = FileHelper::normalizePath(Craft::$app->path->runtimePath . "/jitter");
                         if (\file_exists($s3MasterCache))
                         {
-                            JITIT::getInstance()->transform->clearS3BucketCache($s3MasterCache);
+                            Jitter::getInstance()->transform->clearS3BucketCache($s3MasterCache);
                         }
 
-                        $publicDir = FileHelper::normalizePath(Yii::getAlias('@webroot') . "/jitit");
+                        $publicDir = FileHelper::normalizePath(Yii::getAlias('@webroot') . "/jitter");
                         if (\file_exists($publicDir))
                         {
                             array_map('unlink', glob("$publicDir/*"));
@@ -133,17 +133,6 @@ class JITIT extends Plugin
                         }
                     }
                 ];
-            }
-        );
-
-        // Do something after we're installed
-        Event::on(
-            Plugins::class,
-            Plugins::EVENT_AFTER_INSTALL_PLUGIN,
-            function (PluginEvent $event) {
-                if ($event->plugin === $this) {
-                    // We were just installed
-                }
             }
         );
 
@@ -167,7 +156,7 @@ class JITIT extends Plugin
  */
         Craft::info(
             Craft::t(
-                'jitit',
+                'jitter',
                 '{name} plugin loaded',
                 ['name' => $this->name]
             ),

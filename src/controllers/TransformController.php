@@ -1,6 +1,6 @@
 <?php
 /**
- * JITIT plugin for Craft CMS 3.x
+ * Jitter plugin for Craft CMS 3.x
  *
  * A just in time image transformation service.
  *
@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2020 Kyle Andrews
  */
 
-namespace codewithkyle\jitit\controllers;
+namespace codewithkyle\jitter\controllers;
 
-use codewithkyle\jitit\JITIT;
+use codewithkyle\jitter\Jitter;
 
 use Craft;
 use craft\web\Controller;
@@ -32,7 +32,7 @@ use craft\web\Controller;
  * https://craftcms.com/docs/plugins/controllers
  *
  * @author    Kyle Andrews
- * @package   JITIT
+ * @package   Jitter
  * @since     1.0.0
  */
 class TransformController extends Controller
@@ -56,7 +56,7 @@ class TransformController extends Controller
         $request = Craft::$app->getRequest();
         $params = $request->getQueryParams();
         $clientAcceptsWebp = $request->accepts('image/webp');
-        $response = JITIT::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
+        $response = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
         if ($response['success'])
         {
             if ($response['type'] == 'external')

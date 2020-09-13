@@ -1,6 +1,6 @@
 <?php
 /**
- * JITIT plugin for Craft CMS 3.x
+ * Jitter plugin for Craft CMS 3.x
  *
  * A just in time image transformation service.
  *
@@ -9,17 +9,17 @@
  */
 
 /**
- * JITIT en Translation
+ * Jitter en Translation
  *
- * Returns an array with the string to be translated (as passed to `Craft::t('jitit', '...')`) as
+ * Returns an array with the string to be translated (as passed to `Craft::t('jitter', '...')`) as
  * the key, and the translation as the value.
  *
  * http://www.yiiframework.com/doc-2.0/guide-tutorial-i18n.html
  *
  * @author    Kyle Andrews
- * @package   JITIT
+ * @package   Jitter
  * @since     1.0.0
  */
 return [
-    'JITIT plugin loaded' => 'JITIT plugin loaded',
+    'Jitter plugin loaded' => 'Jitter plugin loaded',
 ];

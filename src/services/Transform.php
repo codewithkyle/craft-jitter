@@ -1,6 +1,6 @@
 <?php
 /**
- * JITIT plugin for Craft CMS 3.x
+ * Jitter plugin for Craft CMS 3.x
  *
  * A just in time image transformation service.
  *
@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2020 Kyle Andrews
  */
 
-namespace codewithkyle\jitit\services;
+namespace codewithkyle\jitter\services;
 
-use codewithkyle\jitit\JITIT;
+use codewithkyle\jitter\Jitter;
 
 use Craft;
 use craft\base\Component;
@@ -31,7 +31,7 @@ use Yii;
  * https://craftcms.com/docs/plugins/services
  *
  * @author    Kyle Andrews
- * @package   JITIT
+ * @package   Jitter
  * @since     1.0.0
  */
 class Transform extends Component
@@ -41,7 +41,12 @@ class Transform extends Component
 
     public function clearS3BucketCache(string $dirname)
     {
-        $settings = include(FileHelper::normalizePath(Craft::$app->path->configPath . '/jitit.php')) ?? [];
+        $settings = [];
+        $settingsPath = FileHelper::normalizePath(Craft::$app->path->configPath . '/jitter.php');
+        if (\file_exists($settingsPath))
+        {
+            $settings = include($settingsPath);
+        }
         if (isset($settings['accessKey']) && isset($settings['secretAccessKey']) && isset($settings['region']) && isset($settings['bucket']))
         {
             $s3 = S3Client::factory([
@@ -80,7 +85,7 @@ class Transform extends Component
     {        
         $masterImage = null;
         $ret = "";
-        $baseUrl = "/actions/jitit/transform/image?id=" . $id;
+        $baseUrl = "/actions/jitter/transform/image?id=" . $id;
 
         $asset = Asset::find()->id($id)->one();
         if (empty($asset))
@@ -167,7 +172,21 @@ class Transform extends Component
             $masterImage = $params['path'];
         }
 
-        $settings = include(FileHelper::normalizePath(Craft::$app->path->configPath . '/jitit.php')) ?? null;
+        preg_match("/(\..*)$/", $asset->filename, $matches);
+        $baseType = strtolower(ltrim($matches[0], "."));
+
+        // Build transform details
+        $transform = $this->getImageTransformSettings($params, $masterImage);
+        $uid = $this->buildTransformUid($transform);
+        $filename = preg_replace("/(\..*)$/", '', $asset->filename) . '-' . $uid;
+
+        // Create S3 client (if possible)
+        $settings = [];
+        $settingsPath = FileHelper::normalizePath(Craft::$app->path->configPath . '/jitter.php');
+        if (\file_exists($settingsPath))
+        {
+            $settings = include($settingsPath);
+        }
         $s3 = null;
         if (isset($settings['accessKey']) && isset($settings['secretAccessKey']) && isset($settings['region']) && isset($settings['bucket']))
         {
@@ -180,14 +199,6 @@ class Transform extends Component
                 'version' => 'latest'
             ]);
         }
-
-        preg_match("/(\..*)$/", $asset->filename, $matches);
-        $baseType = strtolower(ltrim($matches[0], "."));
-
-        // Build transform details
-        $transform = $this->getImageTransformSettings($params, $masterImage);
-        $uid = $this->buildTransformUid($transform);
-        $filename = preg_replace("/(\..*)$/", '', $asset->filename) . '-' . $uid;
 
         // Quickly respond with existing files
         if ($s3)
@@ -211,13 +222,13 @@ class Transform extends Component
             if ($existingFile){
                 $cleanName = DIRECTORY_SEPARATOR . str_replace('\\', '/', $existingFile);
                 $cleanName = preg_replace("/.*\//", '', $cleanName);
-                $response['url'] = "/jitit/" . $cleanName;
+                $response['url'] = "/jitter/" . $cleanName;
                 $response['type'] = 'local';
                 return $response;
             }
         }
 
-        // Do the thing
+        // Do the things
         $tempImage = $this->transform($masterImage, $baseType, $transform);
         $finalImage = $this->convertImage($tempImage, $filename, $baseType, $clientAcceptsWebp, $transform);
 
@@ -238,18 +249,18 @@ class Transform extends Component
                 'SourceFile' => $finalImage,
                 'ACL' => 'public-read',
             ]);
-            $jititCachePath = FileHelper::normalizePath(Craft::$app->path->runtimePath . '/jitit');
-            if (!file_exists($jititCachePath))
+            $jitterCachePath = FileHelper::normalizePath(Craft::$app->path->runtimePath . '/jitter');
+            if (!file_exists($jitterCachePath))
             {
-                mkdir($jititCachePath);
+                mkdir($jitterCachePath);
             }
-            touch(FileHelper::normalizePath($jititCachePath . DIRECTORY_SEPARATOR . $filename. $finalImageType));
+            touch(FileHelper::normalizePath($jitterCachePath . DIRECTORY_SEPARATOR . $filename. $finalImageType));
             $response['url'] = $s3Response['ObjectURL'];
             $response['type'] = 'external';
         }
         else
         {
-            $publicPath = FileHelper::normalizePath(Yii::getAlias("@webroot") . '/jitit');
+            $publicPath = FileHelper::normalizePath(Yii::getAlias("@webroot") . '/jitter');
             if (!file_exists($publicPath))
             {
                 mkdir($publicPath);
@@ -257,10 +268,11 @@ class Transform extends Component
             $cleanName = DIRECTORY_SEPARATOR . str_replace('\\', '/', $finalImage);
             $cleanName = preg_replace("/.*\//", '', $cleanName);
             copy($finalImage, FileHelper::normalizePath($publicPath. DIRECTORY_SEPARATOR  . $cleanName));
-            $response['url'] = "/jitit/" . $cleanName;
+            $response['url'] = "/jitter/" . $cleanName;
             $response['type'] = 'local';
         }
 
+        // Cleanup
         unlink($tempImage);
         unlink($finalImage);
 
@@ -279,7 +291,7 @@ class Transform extends Component
         $existingFile = null;
         foreach ($fileTypes as $fileType)
         {
-            $file = FileHelper::normalizePath($path . '/jitit/' . $filename . "." . $fileType);
+            $file = FileHelper::normalizePath($path . '/jitter/' . $filename . "." . $fileType);
             if (file_exists($file))
             {
                 if ($format != 'auto')

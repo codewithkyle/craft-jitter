@@ -1,6 +1,6 @@
 # Just In Time Image Transformations
 
-JITIT is a just in time image transformation plugin for Craft CMS. The API is based on [Imgix](https://docs.imgix.com/apis/url). This plugin was created to be a simple and free alternative to an Imgix style service. It **does not and will not** have all the bells and whisles that other paid services/plugins offer. If you need something a bit more advanced besides basic image transformations I suggest you pay for [Imgix](https://www.imgix.com/pricing) or [Imager X](https://plugins.craftcms.com/imager-x).
+Jitter is a just in time image transformation plugin for Craft CMS. The API is based on [Imgix](https://docs.imgix.com/apis/url). This plugin was created to be a simple and free alternative to an Imgix style service. It **does not and will not** have all the bells and whisles that other paid services/plugins offer. If you need something a bit more advanced besides basic image transformations I suggest you pay for [Imgix](https://www.imgix.com/pricing) or [Imager X](https://plugins.craftcms.com/imager-x).
 
 ## Requirements
 
@@ -16,13 +16,13 @@ To install the plugin, follow these instructions.
 
 2. Then tell Composer to load the plugin:
 
-        composer require codewithkyle/jitit
+        composer require codewithkyle/jitter
 
-3. In the Control Panel, go to Settings → Plugins and click the “Install” button for JITIT.
+3. In the Control Panel, go to Settings → Plugins and click the “Install” button for Jitter.
 
-## Configuring JITIT
+## Configuring Jitter
 
-JITIT can be configured by adding a `jitit.php` file to your projects `config/` directory.
+Jitter can be configured by adding a `jitter.php` file to your projects `config/` directory.
 
 ```php
 <?php
@@ -36,26 +36,26 @@ return [
 ];
 ```
 
-## Using JITIT
+## Using Jitter
 
 Requesting an image transformation through the API:
 
 ```
-/actions/jitit/transform/image?id=1w=768&ar=16:9
+/actions/jitter/transform/image?id=1w=768&ar=16:9
 ```
 
 Requesting an image transformation via Twig:
 
 ```twig
 {# This will transform the image on page load #}
-{% set transformedImageUrl = craft.jitit.transformImage(entry.image[0], { w: 150, ar: 1/1, m: "fit", fm: "gif", q: 10 }) %}
+{% set transformedImageUrl = craft.jitter.transformImage(entry.image[0], { w: 150, ar: 1/1, m: "fit", fm: "gif", q: 10 }) %}
 
-{# For a faster template render build the API URL instead  #}
-{% set transformedImageUrl = "/actions/jitit/transform/image&id=" ~ entry.image[0].id ~ "&w=150&ar=1:1&m=fit&fm=gif&q=10" %}
+{# For a faster template render build the API URL instead #}
+{% set transformedImageUrl = "/actions/jitter/transform/image&id=" ~ entry.image[0].id ~ "&w=150&ar=1:1&m=fit&fm=gif&q=10" %}
 
 <img 
     src="{{ transformedImageUrl }}" 
-    srcset="{{ craft.jitit.srcset(entry.image[0], [
+    srcset="{{ craft.jitter.srcset(entry.image[0], [
         { w: 300, h: 250, },
         { w: 768, ar: 16/9, },
         { w: 1024, ar: 16/9, },
@@ -82,7 +82,7 @@ Transformation parameters:
 
 The `auto` format will return a `webp` image when the server can generated the format and clients browser supports the format.
 
-## JITIT Roadmap
+## Roadmap
 
 - [x] Roadmap & API documentation
 - [x] Create image transformation service

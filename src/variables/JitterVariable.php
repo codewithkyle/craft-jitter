@@ -1,6 +1,6 @@
 <?php
 /**
- * JITIT plugin for Craft CMS 3.x
+ * Jitter plugin for Craft CMS 3.x
  *
  * A just in time image transformation service.
  *
@@ -8,15 +8,15 @@
  * @copyright Copyright (c) 2020 Kyle Andrews
  */
 
-namespace codewithkyle\jitit\variables;
+namespace codewithkyle\jitter\variables;
 
-use codewithkyle\jitit\JITIT;
+use codewithkyle\jitter\Jitter;
 
 use Craft;
 use craft\elements\Asset;
 
 /**
- * JITIT Variable
+ * Jitter Variable
  *
  * Craft allows plugins to provide their own template variables, accessible from
  * the {{ craft }} global variable (e.g. {{ craft.jITIT }}).
@@ -24,10 +24,10 @@ use craft\elements\Asset;
  * https://craftcms.com/docs/plugins/variables
  *
  * @author    Kyle Andrews
- * @package   JITIT
+ * @package   Jitter
  * @since     1.0.0
  */
-class JITITVariable
+class JitterVariable
 {
     // Public Methods
     // =========================================================================
@@ -38,7 +38,7 @@ class JITITVariable
         $clientAcceptsWebp = $request->accepts('image/webp');
         $params = json_decode(json_encode($params), true);
         $params['id'] = $file->id;
-        $response = JITIT::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
+        $response = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
         if ($response['success'])
         {
             return $response['url'];
@@ -52,6 +52,6 @@ class JITITVariable
     public function srcset(Asset $file, array $params): string
     {
         $images = json_decode(json_encode($params), true);
-        return JITIT::getInstance()->transform->generateSourceSet($file->id, $images);
+        return Jitter::getInstance()->transform->generateSourceSet($file->id, $images);
     }
 }
