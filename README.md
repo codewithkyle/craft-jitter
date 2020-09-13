@@ -28,14 +28,11 @@ JITIT can be configured by adding a `jitit.php` file to your projects `config/` 
 <?php
 
 return [
-        'imageUrl' => 'http://s3-us-east-2.amazonaws.com/transformed-images/',
         'accessKey' => getenv("S3_PUBLIC_KEY"),
         'secretAccessKey' => getenv("S3_PRIVATE_KEY"),
         'region' => 'us-east-2',
         'bucket' => 'bucket-name',
         'folder' => 'transformed-images',
-        'requestHeaders' => array(),
-        'storageType' => 'standard',
 ];
 ```
 
@@ -75,7 +72,7 @@ Optional transformation parameters:
 | `w`           | base image width         | desired image width             | `number`                            |
 | `h`           | base image height        | desired image height            | `number`                            |
 | `ar`          | base image aspect ratio  | desired aspect ratio            | `number:number`                     |
-| `fm`          | `auto`                   | desired image format            | `jpg`, `png`, `webp`, `gif`, `auto` |
+| `fm`          | `auto`                   | desired image format            | `jpg`, `png`, `gif`, `auto`         |
 | `q`           | `80`                     | desired image quality           | `0` to `100`                        |
 | `m`           | `crop`                   | how the image should be resized | `crop`, `fit`, `letterbox`          |
 | `bg`          | `#ffffff`                | letterbox background color      | `hex`                               |
@@ -83,6 +80,8 @@ Optional transformation parameters:
 ## JITIT Roadmap
 
 - [x] Roadmap & API documentation
-- [ ] Create image transformation service
-- [ ] Add AWS S3 bucket support
+- [x] Create image transformation service
+- [x] Create image transformation twig variable
+- [x] Add AWS S3 bucket support
 - [ ] Initial release
+- [ ] Add GD support

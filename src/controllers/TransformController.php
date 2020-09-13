@@ -55,10 +55,11 @@ class TransformController extends Controller
     {
         $request = Craft::$app->getRequest();
         $params = $request->getQueryParams();
-        $response = JITIT::getInstance()->transform->transformImage($params);
+        $clientAcceptsWebp = $request->accepts('image/webp');
+        $response = JITIT::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
         if ($response['success'])
         {
-            return $response;
+            return $this->asJson($response);
         }
         else
         {
