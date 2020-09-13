@@ -355,13 +355,19 @@ class Transform extends Component
             }
         }
 
+        $bg = 'ffffff';
+        if (isset($params['bg']))
+        {
+            $bg = ltrim($params['bg'], '#');
+        }
+
         $transform = [
             'width' => round($width),
             'height' => round($height),
             'format' => $params['fm'] ?? 'auto',
             'mode' => $mode,
             'quality' => $quality,
-            'background' => $params['bg'] ?? 'ffffff',
+            'background' => $bg,
         ];
         return $transform;
     }

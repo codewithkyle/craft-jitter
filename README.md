@@ -75,7 +75,7 @@ Optional transformation parameters:
 | `fm`          | `auto`                   | desired image format            | `jpg`, `png`, `gif`, `auto`         |
 | `q`           | `80`                     | desired image quality           | `0` to `100`                        |
 | `m`           | `crop`                   | how the image should be resized | `crop`, `fit`, `letterbox`          |
-| `bg`          | `#ffffff`                | letterbox background color      | `hex`                               |
+| `bg`          | `ffffff`                 | letterbox background color      | `hex`                               |
 
 ## JITIT Roadmap
 
