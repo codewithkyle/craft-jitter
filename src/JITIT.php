@@ -12,18 +12,20 @@ namespace codewithkyle\jitit;
 
 use codewithkyle\jitit\services\Transform as TransformService;
 use codewithkyle\jitit\variables\JITITVariable;
-use codewithkyle\jitit\utilities\JITITUtility as JITITUtilityUtility;
 
 use Craft;
 use craft\base\Plugin;
 use craft\services\Plugins;
 use craft\events\PluginEvent;
 use craft\web\UrlManager;
-use craft\services\Utilities;
 use craft\web\twig\variables\CraftVariable;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\utilities\ClearCaches;
+use craft\events\RegisterCacheOptionsEvent;
+use craft\helpers\FileHelper;
 
+use Yii;
 use yii\base\Event;
 
 /**
@@ -100,15 +102,6 @@ class JITIT extends Plugin
         parent::init();
         self::$plugin = $this;
 
-        // Register our utilities
-        Event::on(
-            Utilities::class,
-            Utilities::EVENT_REGISTER_UTILITY_TYPES,
-            function (RegisterComponentTypesEvent $event) {
-                $event->types[] = JITITUtilityUtility::class;
-            }
-        );
-
         // Register our variables
         Event::on(
             CraftVariable::class,
@@ -117,6 +110,29 @@ class JITIT extends Plugin
                 /** @var CraftVariable $variable */
                 $variable = $event->sender;
                 $variable->set('jitit', JITITVariable::class);
+            }
+        );
+
+        Event::on(ClearCaches::class, ClearCaches::EVENT_REGISTER_CACHE_OPTIONS,
+            function (RegisterCacheOptionsEvent $event) {
+                $event->options[] = [
+                    'key' => 'jitit-transform-cache',
+                    'label' => Craft::t('jitit', 'Transformed images'),
+                    'action' => function() {
+                        $s3MasterCache = FileHelper::normalizePath(Craft::$app->path->runtimePath . "/jitit");
+                        if (\file_exists($s3MasterCache))
+                        {
+                            JITIT::getInstance()->transform->clearS3BucketCache($s3MasterCache);
+                        }
+
+                        $publicDir = FileHelper::normalizePath(Yii::getAlias('@webroot') . "/jitit");
+                        if (\file_exists($publicDir))
+                        {
+                            array_map('unlink', glob("$publicDir/*"));
+                            rmdir($publicDir);
+                        }
+                    }
+                ];
             }
         );
 

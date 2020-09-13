@@ -90,5 +90,7 @@ The `auto` format will return a `webp` image when the server can generated the f
 - [x] Add AWS S3 bucket support
 - [x] Add focus point parameters
 - [x] Add `srcset()` functionality
-- [ ] Add cache clearing functionality
+- [x] Add cache clearing functionality
+    - [x] Delete local files
+    - [x] Delete S3 files
 - [ ] Initial release

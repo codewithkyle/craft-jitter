@@ -39,6 +39,43 @@ class Transform extends Component
     // Public Methods
     // =========================================================================
 
+    public function clearS3BucketCache(string $dirname)
+    {
+        $settings = include(FileHelper::normalizePath(Craft::$app->path->configPath . '/jitit.php')) ?? [];
+        if (isset($settings['accessKey']) && isset($settings['secretAccessKey']) && isset($settings['region']) && isset($settings['bucket']))
+        {
+            $s3 = S3Client::factory([
+                'credentials' => [
+                    'key'    => $settings['accessKey'],
+                    'secret' => $settings['secretAccessKey'],
+                ],
+                'region' => $settings['region'],
+                'version' => 'latest'
+            ]);
+
+            $files = \scandir($dirname);
+            foreach ($files as $key => $value)
+            {
+                if ($value != '.' && $value != '..')
+                {
+                    $uri = "/" . str_replace('\\', '/', $value);
+                    $uri = preg_replace("/.*\//", '', $uri);
+                    if (isset($settings['folder']))
+                    {
+                        $uri = trim($settings['folder'], "/") . "/"  . ltrim($uri, "/");
+                    }
+                    $s3->deleteObject([
+                        'Bucket' => $settings['bucket'],
+                        'Key'    => $uri,
+                    ]);
+                    unlink(FileHelper::normalizePath($dirname . "/" . $value));
+                }
+            }
+
+            rmdir($dirname);
+        }
+    }
+
     public function generateSourceSet(string $id, array $images): string
     {        
         $masterImage = null;
@@ -132,7 +169,7 @@ class Transform extends Component
 
         $settings = include(FileHelper::normalizePath(Craft::$app->path->configPath . '/jitit.php')) ?? null;
         $s3 = null;
-        if (!empty($settings))
+        if (isset($settings['accessKey']) && isset($settings['secretAccessKey']) && isset($settings['region']) && isset($settings['bucket']))
         {
             $s3 = S3Client::factory([
                 'credentials' => [
