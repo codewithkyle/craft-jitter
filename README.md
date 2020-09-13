@@ -28,17 +28,17 @@ JITIT can be configured by adding a `jitit.php` file to your projects `config/` 
 <?php
 
 return [
-        'accessKey' => getenv("S3_PUBLIC_KEY"),
-        'secretAccessKey' => getenv("S3_PRIVATE_KEY"),
-        'region' => 'us-east-2',
-        'bucket' => 'bucket-name',
-        'folder' => 'transformed-images',
+    'accessKey' => getenv("S3_PUBLIC_KEY"),
+    'secretAccessKey' => getenv("S3_PRIVATE_KEY"),
+    'region' => 'us-east-2',
+    'bucket' => 'bucket-name',
+    'folder' => 'transformed-images',
 ];
 ```
 
 ## Using JITIT
 
-Requesting an image transformation via API:
+Requesting an image transformation through the API:
 
 ```
 /actions/jitit/transform/image?id=1w=768&ar=16:9
@@ -48,16 +48,16 @@ API response:
 
 ```typescript
 interface {
-        success: boolean;
-        error: string;
-        url: string;
+    success: boolean;
+    error: string;
+    url: string;
 }
 ```
 
 Requesting an image transformation via Twig:
 
 ```twig
-{% set image = craft.jitit.transformImage(element.image[0], { width: 768, ratio: 16/9 }) %}
+{% set image = craft.jitit.transformImage(entry.image[0], { w: 768, ar: 16/9 }) %}
 <img src="{{ image.url }}" />
 ```
 
