@@ -74,6 +74,8 @@ Optional transformation parameters:
 | `q`           | `80`                     | desired image quality           | `0` to `100`                        |
 | `m`           | `crop`                   | how the image should be resized | `crop`, `fit`, `letterbox`          |
 | `bg`          | `ffffff`                 | letterbox background color      | `hex`                               |
+| `fp-x`        | `0.5`                    | horizontal focus point          | `0` to `1`                          |
+| `fp-y`        | `0.5`                    | vertical focus point            | `0` to `1`                          |
 
 ## JITIT Roadmap
 

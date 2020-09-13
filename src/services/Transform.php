@@ -284,24 +284,35 @@ class Transform extends Component
     private function transform(string $path, string $baseType, string $uid, array $transform): string
     {
         $img = new Imagick($path);
+        $leftPos = floor($img->getImageWidth() * $transform['focusPoint'][0]) - floor($transform['width'] / 2);
+        $topPos = floor($img->getImageHeight() * $transform['focusPoint'][1]) - floor($transform['height'] / 2);
 
         switch ($transform['mode'])
         {
-            case "resize":
+            case "fit":
                 $img->thumbnailImage($transform['width'], $transform['height'], false, false);
+                $tempPath = Craft::$app->path->tempPath;
+                $tempImage = $tempPath . "/" . $uid . $baseType;
+                $img->writeImage($tempImage);
                 break;
             case "letterbox":
                 $img->setImageBackgroundColor('#' . $transform['background']);
                 $img->thumbnailImage($transform['width'], $transform['height'], true, true);
+                $tempPath = Craft::$app->path->tempPath;
+                $tempImage = $tempPath . "/" . $uid . $baseType;
+                $img->writeImage($tempImage);
                 break;
             default:
-                $img->cropThumbnailImage($transform['width'], $transform['height']);
+                $tempPath = Craft::$app->path->tempPath;
+                $tempImage = $tempPath . "/" . $uid . $baseType;
+                $img->writeImage($tempImage);
+                $cropedImage = imagecreatetruecolor($transform['width'], $transform['height']);
+                $srcImage = imagecreatefromjpeg($tempImage);
+                \imagecopyresampled($cropedImage, $srcImage, 0, 0, $leftPos, $topPos, $transform['width'], $transform['height'], $transform['width'], $transform['height']);
+                \imagejpeg($cropedImage, $tempImage, 100);
                 break;
         }
 
-        $tempPath = Craft::$app->path->tempPath;
-        $tempImage = $tempPath . "/" . $uid . $baseType;
-        $img->writeImage($tempImage);
         return $tempImage;
     }
 
@@ -366,6 +377,16 @@ class Transform extends Component
             $bg = ltrim($params['bg'], '#');
         }
 
+        $focusPoints = [0.5, 0.5];
+        if (isset($params['fp-x']))
+        {
+            $focusPoints[0] = floatval($params['fp-x']);
+        }
+        if (isset($params['fp-y']))
+        {
+            $focusPoints[1] = floatval($params['fp-y']);
+        }
+
         $transform = [
             'width' => round($width),
             'height' => round($height),
@@ -373,6 +394,7 @@ class Transform extends Component
             'mode' => $mode,
             'quality' => $quality,
             'background' => $bg,
+            'focusPoint' => $focusPoints
         ];
         return $transform;
     }
