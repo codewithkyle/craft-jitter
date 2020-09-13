@@ -47,7 +47,12 @@ Requesting an image transformation through the API:
 Requesting an image transformation via Twig:
 
 ```twig
-{% set transformedImageUrl = craft.jitit.transformImage(entry.image[0], { w: 150, ar: 1/1, m: "resize", fm: "gif", q: 10 }) %}
+{# This will transform the image on page load #}
+{% set transformedImageUrl = craft.jitit.transformImage(entry.image[0], { w: 150, ar: 1/1, m: "fit", fm: "gif", q: 10 }) %}
+
+{# For a faster template render build the API URL instead  #}
+{% set transformedImageUrl = "/actions/jitit/transform/image&id=" ~ entry.image[0].id ~ "&w=150&ar=1:1&m=fit&fm=gif&q=10" %}
+
 <img 
     src="{{ transformedImageUrl }}" 
     srcset="{{ craft.jitit.srcset(entry.image[0], [
@@ -55,6 +60,8 @@ Requesting an image transformation via Twig:
         { w: 768, ar: 16/9, },
         { w: 1024, ar: 16/9, },
     ]) }}" 
+    loading="lazy"
+    width="1024"
 />
 ```
 
@@ -82,6 +89,6 @@ The `auto` format will return a `webp` image when the server can generated the f
 - [x] Create image transformation twig variable
 - [x] Add AWS S3 bucket support
 - [x] Add focus point parameters
-- [ ] Add `srcset()` functionality
+- [x] Add `srcset()` functionality
 - [ ] Add cache clearing functionality
 - [ ] Initial release

@@ -32,20 +32,13 @@ class JITITVariable
     // Public Methods
     // =========================================================================
 
-    public function transformImage($file, $params): string
+    public function transformImage(Asset $file, $params): string
     {
         $request = Craft::$app->getRequest();
         $clientAcceptsWebp = $request->accepts('image/webp');
         $params = json_decode(json_encode($params), true);
-        if ($file instanceof Asset)
-        {
-            $params['id'] = $file->id;
-        }
-        else if (typeof($file) == "string")
-        {
-            $params["url"] = $file;
-        }
-        $response = ITIT::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
+        $params['id'] = $file->id;
+        $response = JITIT::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
         if ($response['success'])
         {
             return $response['url'];
@@ -54,5 +47,11 @@ class JITITVariable
         {
             Craft::error($response['error'], __METHOD__);
         }
+    }
+
+    public function srcset(Asset $file, array $params): string
+    {
+        $images = json_decode(json_encode($params), true);
+        return JITIT::getInstance()->transform->generateSourceSet($file->id, $images);
     }
 }

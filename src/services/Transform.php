@@ -39,6 +39,68 @@ class Transform extends Component
     // Public Methods
     // =========================================================================
 
+    public function generateSourceSet(string $id, array $images): string
+    {        
+        $masterImage = null;
+        $ret = "";
+        $baseUrl = "/actions/jitit/transform/image?id=" . $id;
+
+        $asset = Asset::find()->id($id)->one();
+        if (empty($asset))
+        {
+            Craft::error("Failed to find asset with an id of " . $id, __METHOD__);
+        }
+        else
+        {
+            $masterImage = $asset->url;
+        }
+        if ($masterImage)
+        {
+            $count = 0;
+            $maxCount = count($images);
+            foreach ($images as $image)
+            {
+                $count++;
+                $ret .= $baseUrl;
+                foreach ($image as $key => $value)
+                {
+                    $ret .= "&" . $key . "=" . $value;
+                }
+                if (isset($image['w']))
+                {
+                    $ret .= " " . $image['w'] . "w";
+                }
+                else
+                {
+                    if (isset($image['h']))
+                    {
+                        $aspectRatioValues = [$asset->width, $asset->height];
+                        if (isset($params['ar']))
+                        {
+                            $values = explode(':', $params['ar']);
+                            if (count($values) == 2)
+                            {
+                                $aspectRatioValues = [intval($values[0]), intval($values[1])];
+                            }
+                        }
+                        $height = intval($params['h']);
+                        $width = ($aspectRatioValues[0] / $aspectRatioValues[1]) * $height;
+                        $ret .= " " . $width . "w";
+                    }
+                    else
+                    {
+                        $ret .= " " . $asset->width . "w";
+                    }
+                }
+                if ($count < $maxCount)
+                {
+                    $ret .= ", ";
+                }
+            }
+        }
+        return $ret;
+    }
+
     public function transformImage(array $params, bool $clientAcceptsWebp): array
     {
         $response = [
