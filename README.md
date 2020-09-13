@@ -61,7 +61,7 @@ Requesting an image transformation via Twig:
 <img 
     src="{{ transformedImageUrl }}" 
     srcset="{{ craft.jitit.srcset(entry.image[0], [
-        { w: 300, height: 250, },
+        { w: 300, h: 250, },
         { w: 768, ar: 16/9, },
         { w: 1024, ar: 16/9, },
     ]) }}" 
