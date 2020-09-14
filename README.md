@@ -1,6 +1,6 @@
 # Just In Time Image Transformations
 
-Jitter is a just in time image transformation plugin for Craft CMS. The API is based on [Imgix](https://docs.imgix.com/apis/url). This plugin was created to be a simple and free alternative to an Imgix style service. It **does not and will not** have all the bells and whisles that other paid services/plugins offer. If you need something a bit more advanced besides basic image transformations I suggest you pay for [Imgix](https://www.imgix.com/pricing) or [Imager X](https://plugins.craftcms.com/imager-x).
+Jitter is a just in time image transformation plugin for Craft CMS. The API is based on [Imgix](https://docs.imgix.com/apis/url). This plugin was created to be a simple and free alternative to an Imgix style service. It **does not and will not** have all the bells and whistles that other paid services/plugins offer. If you need something a bit more advanced besides basic image transformations I suggest you pay for [Imgix](https://www.imgix.com/pricing) or [Imager X](https://plugins.craftcms.com/imager-x).
 
 ## Requirements
 
@@ -80,7 +80,7 @@ Transformation parameters:
 | `fp-x`        | `0.5`                    | horizontal focus point          | `0` to `1`                             |
 | `fp-y`        | `0.5`                    | vertical focus point            | `0` to `1`                             |
 
-The `auto` format will return a `webp` image when the server can generated the format and clients browser supports the format.
+The `auto` format type will return a `webp` image when the server can generate the format and the client's browser supports the format.
 
 ## Roadmap
 
