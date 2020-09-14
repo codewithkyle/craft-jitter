@@ -41,14 +41,14 @@ return [
 Requesting an image transformation through the API:
 
 ```
-/actions/jitter/transform/image?id=1w=768&ar=16:9
+/actions/jitter/transform/image?id=1&w=768&ar=16:9
 ```
 
 Requesting an image transformation via Twig:
 
 ```twig
 {# This will transform the image on page load #}
-{% set transformedImageUrl = craft.jitter.transformImage(entry.image[0], { w: 150, ar: 1/1, m: "fit", fm: "gif", q: 10 }) %}
+{% set transformedImageUrl = craft.jitter.transformImage(entry.image[0], { w: 150, ar: "1:1", m: "fit", fm: "gif", q: 10 }) %}
 
 {# For a faster template render build the API URL instead #}
 {% set transformedImageUrl = "/actions/jitter/transform/image&id=" ~ entry.image[0].id ~ "&w=150&ar=1:1&m=fit&fm=gif&q=10" %}
@@ -57,8 +57,8 @@ Requesting an image transformation via Twig:
     src="{{ transformedImageUrl }}" 
     srcset="{{ craft.jitter.srcset(entry.image[0], [
         { w: 300, h: 250, },
-        { w: 768, ar: 16/9, },
-        { w: 1024, ar: 16/9, },
+        { w: 768, ar: "16:9", },
+        { w: 1024, ar: "16:9", },
     ]) }}" 
     loading="lazy"
     width="1024"
