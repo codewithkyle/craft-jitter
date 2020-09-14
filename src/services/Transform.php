@@ -229,7 +229,7 @@ class Transform extends Component
         }
 
         // Do the things
-        $tempImage = $this->transform($masterImage, $baseType, $transform);
+        $tempImage = $this->transform($masterImage, $baseType, $transform, $params);
         $finalImage = $this->convertImage($tempImage, $filename, $baseType, $clientAcceptsWebp, $transform);
 
         // Save the output
@@ -398,7 +398,7 @@ class Transform extends Component
         return $finalImage;
     }
 
-    private function transform(string $path, string $baseType, array $transform): string
+    private function transform(string $path, string $baseType, array $transform, array $params): string
     {
         $helper = new \craft\helpers\StringHelper();
         $uid = str_replace('-', '', $helper->UUID());
@@ -437,13 +437,22 @@ class Transform extends Component
                 break;
             default:
                 // Step 1: resize to best fit
-                if ($transform['width'] > $transform['height'])
+                if (isset($params['w']) && isset($params['h']))
                 {
-                    $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
+                    $width = intval($params['w']);
+                    $height = intval($params['h']);
+                    $img->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 0.75);
                 }
                 else
                 {
-                    $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
+                    if ($transform['width'] > $transform['height'])
+                    {
+                        $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
+                    }
+                    else
+                    {
+                        $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
+                    }
                 }
 
                 // Get focus points
