@@ -418,7 +418,7 @@ class Transform extends Component
                 break;
             case "letterbox":
                 $img->setImageBackgroundColor('#' . $transform['background']);
-                $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75, true);
+                $img->thumbnailImage($transform['width'], $transform['height'], true, true);
                 $tempPath = Craft::$app->path->tempPath;
                 $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
                 $img->writeImage($tempImage);
@@ -436,23 +436,17 @@ class Transform extends Component
                 $img->writeImage($tempImage);
                 break;
             default:
-                // Step 1: resize to best fit
-                if (isset($params['w']) && isset($params['h']))
+                if ($transform['width'] < $transform['height'])
                 {
-                    $width = intval($params['w']);
-                    $height = intval($params['h']);
-                    $img->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 0.75);
+                    $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
+                }
+                else if ($transform['height'] < $transform['width'])
+                {
+                    $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
                 }
                 else
                 {
-                    if ($transform['width'] > $transform['height'])
-                    {
-                        $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
-                    }
-                    else
-                    {
-                        $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
-                    }
+                    $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
                 }
 
                 // Get focus points
