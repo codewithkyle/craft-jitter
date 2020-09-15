@@ -436,17 +436,44 @@ class Transform extends Component
                 $img->writeImage($tempImage);
                 break;
             default:
-                if ($transform['width'] < $transform['height'])
+                if (isset($params['w']) && isset($params['h']) || !isset($params['w']) && !isset($params['h']))
                 {
-                    $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
-                }
-                else if ($transform['height'] < $transform['width'])
-                {
-                    $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
+                    if ($transform['width'] < $transform['height'])
+                    {
+                        $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
+                    }
+                    else if ($transform['height'] < $transform['width'])
+                    {
+                        $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
+                    }
+                    else
+                    {
+                        $rawWidth = $img->getImageWidth();
+                        $rawHeight = $img->getImageHeight();
+                        if ($rawWidth < $rawHeight)
+                        {
+                            $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
+                        }
+                        else if ($rawHeight < $rawWidth)
+                        {
+                            $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
+                        }
+                        else
+                        {
+                            $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
+                        }
+                    }
                 }
                 else
                 {
-                    $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
+                    if (isset($params['w']))
+                    {
+                        $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
+                    }
+                    else
+                    {
+                        $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
+                    }
                 }
 
                 // Get focus points
