@@ -93,4 +93,4 @@ The `auto` format type will return a `webp` image when the server can generate t
 - [x] Add cache clearing functionality
     - [x] Delete local files
     - [x] Delete S3 files
-- [ ] Initial release
+- [x] Initial release
