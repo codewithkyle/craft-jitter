@@ -14,6 +14,9 @@ use codewithkyle\jitter\Jitter;
 
 use Craft;
 use craft\web\Controller;
+use craft\helpers\FileHelper;
+use Yii;
+use yii\web\Response;
 
 /**
  * Transform Controller
@@ -56,16 +59,21 @@ class TransformController extends Controller
         $request = Craft::$app->getRequest();
         $params = $request->getQueryParams();
         $clientAcceptsWebp = $request->accepts('image/webp');
-        $response = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
-        if ($response['success'])
+        $imageDetails = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
+        if ($imageDetails['success'])
         {
-            if ($response['type'] == 'external')
+            if ($imageDetails['type'] == 'external')
             {
-                return Craft::$app->getResponse()->redirect($response['url']);
+                return Craft::$app->getResponse()->redirect($imageDetails['url']);
             }
             else
             {
-                return Craft::$app->getResponse()->redirect($response['url']);
+                $filePath = rtrim(Yii::getAlias("@webroot"), "/") . DIRECTORY_SEPARATOR . trim($imageDetails['url'], "/");
+                $response = Craft::$app->getResponse();
+                $response->headers->set("Content-Type", $imageDetails['contentType']);
+                $response->format = Response::FORMAT_RAW;
+                $response->stream = fopen($filePath, 'r');
+                return $response->send();
             }
         }
         else

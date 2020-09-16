@@ -113,6 +113,16 @@ class Jitter extends Plugin
             }
         );
 
+        // Register our site routes
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_SITE_URL_RULES,
+            function (RegisterUrlRulesEvent $event) {
+                $event->rules['/jitter/v1/transform'] = 'jitter/transform/image';
+            }
+        );
+
+        // Register cache busting utility
         Event::on(ClearCaches::class, ClearCaches::EVENT_REGISTER_CACHE_OPTIONS,
             function (RegisterCacheOptionsEvent $event) {
                 $event->options[] = [

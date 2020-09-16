@@ -224,6 +224,23 @@ class Transform extends Component
                 $cleanName = preg_replace("/.*\//", '', $cleanName);
                 $response['url'] = "/jitter/" . $cleanName;
                 $response['type'] = 'local';
+                preg_match("/(\..*)$/", $existingFile, $matches);
+                $contentType = ltrim($matches[0], ".");
+                switch ($contentType)
+                {
+                    case "webp":
+                        $response['contentType'] = "image/webp";
+                        break;
+                    case "png":
+                        $response['contentType'] = "image/png";
+                        break;
+                    case "gif":
+                        $response['contentType'] = "image/gif";
+                        break;
+                    case "jpg":
+                        $response['contentType'] = "image/jpeg";
+                        break;
+                }
                 return $response;
             }
         }
@@ -270,6 +287,23 @@ class Transform extends Component
             copy($finalImage, FileHelper::normalizePath($publicPath. DIRECTORY_SEPARATOR  . $cleanName));
             $response['url'] = "/jitter/" . $cleanName;
             $response['type'] = 'local';
+            preg_match("/(\..*)$/", $finalImage, $matches);
+            $contentType = ltrim($matches[0], ".");
+            switch ($contentType)
+            {
+                case "webp":
+                    $response['contentType'] = "image/webp";
+                    break;
+                case "png":
+                    $response['contentType'] = "image/png";
+                    break;
+                case "gif":
+                    $response['contentType'] = "image/gif";
+                    break;
+                case "jpg":
+                    $response['contentType'] = "image/jpeg";
+                    break;
+            }
         }
 
         // Cleanup
