@@ -26,5 +26,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - delete local files
     - delete S3 files
 
-[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/codewithkyle/craft-jitter/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/codewithkyle/craft-jitter/releases/tag/v1.0.0
