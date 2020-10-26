@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+## [1.1.0] - 2020-10-26
+
+### Added
+
+- native focus point fallback [#2](https://github.com/codewithkyle/craft-jitter/issues/2)
+
 ## [1.0.0] - 2020-09-16
 
 ### Added

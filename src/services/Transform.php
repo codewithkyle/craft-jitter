@@ -153,6 +153,7 @@ class Transform extends Component
         ];
         
         $masterImage = null;
+        $asset = null;
         if (isset($params['id']))
         {
             $asset = Asset::find()->id($params['id'])->one();
@@ -176,7 +177,7 @@ class Transform extends Component
         $baseType = strtolower(ltrim($matches[0], "."));
 
         // Build transform details
-        $transform = $this->getImageTransformSettings($params, $masterImage);
+        $transform = $this->getImageTransformSettings($params, $masterImage, $asset);
         $uid = $this->buildTransformUid($transform);
         $filename = preg_replace("/(\..*)$/", '', $asset->filename) . '-' . $uid;
 
@@ -526,7 +527,7 @@ class Transform extends Component
         return $tempImage;
     }
 
-    private function getImageTransformSettings(array $params, string $path): array
+    private function getImageTransformSettings(array $params, string $path, Asset $asset): array
     {
         $img = new Imagick($path);
 
@@ -576,8 +577,8 @@ class Transform extends Component
             $bg = ltrim($params['bg'], '#');
         }
 
-        $focusPoints = [0.5, 0.5];
-        if (isset($params['fp-x']))
+        $focusPoints = [];
+        if (isset($params['fp-x']) && isset($params['fp-y']))
         {
             $focusPoints[0] = floatval($params['fp-x']);
             if ($focusPoints[0] < 0)
@@ -588,9 +589,7 @@ class Transform extends Component
             {
                 $focusPoints[0] = 1;
             }
-        }
-        if (isset($params['fp-y']))
-        {
+            
             $focusPoints[1] = floatval($params['fp-y']);
             if ($focusPoints[1] < 0)
             {
@@ -600,6 +599,16 @@ class Transform extends Component
             {
                 $focusPoints[1] = 1;
             }
+        }
+        else if (!is_null($asset) && $asset->hasFocalPoint)
+        {
+            $assetFocalPoint = $asset->getFocalPoint();
+            $focusPoints[0] = floatval($assetFocalPoint['x']);
+            $focusPoints[1] = floatval($assetFocalPoint['y']);
+        }
+        else
+        {
+            $focusPoints = [0.5, 0.5];
         }
 
         $transform = [
