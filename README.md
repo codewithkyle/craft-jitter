@@ -4,7 +4,7 @@ Jitter is a just in time image transformation plugin for Craft CMS. The API is b
 
 ## Requirements
 
-This plugin requires Craft CMS 3.0.0-beta.23 or later.
+This plugin requires Craft CMS 3.0.0-beta.23 or later and [ImageMagick](https://imagemagick.org/index.php).
 
 ## Installation
 
