@@ -67,18 +67,19 @@ Requesting an image transformation via Twig:
 
 Transformation parameters:
 
-| Parameter     | Default                  | Description                     | Valid options                          |
-| ------------- | ------------------------ | ------------------------------- | -------------------------------------- |
-| `id`          | `null`                   | the image asset id (required)   | `int`                                  |
-| `w`           | base image width         | desired image width             | `int`                                  |
-| `h`           | base image height        | desired image height            | `int`                                  |
-| `ar`          | base image aspect ratio  | desired aspect ratio            | `int:int`                              |
-| `fm`          | `auto`                   | desired image format            | `jpg`, `png`, `gif`, `auto`            |
-| `q`           | `80`                     | desired image quality           | `0` to `100`                           |
-| `m`           | `clip`                   | how the image should be resized | `crop`, `clip`, `fit`, `letterbox`     |
-| `bg`          | `ffffff`                 | letterbox background color      | `hex`                                  |
-| `fp-x`        | `0.5`                    | horizontal focus point          | `0` to `1`                             |
-| `fp-y`        | `0.5`                    | vertical focus point            | `0` to `1`                             |
+| Parameter     | Default                    | Description                     | Valid options                          |
+| ------------- | -------------------------- | ------------------------------- | -------------------------------------- |
+| `id`          | `null`                     | the image asset id              | `int`                                  |
+| `path`        | `null`                     | the image asset id              | `int`                                  |
+| `w`           | base image width           | desired image width             | `int`                                  |
+| `h`           | base image height          | desired image height            | `int`                                  |
+| `ar`          | base image aspect ratio    | desired aspect ratio            | `int`:`int`                            |
+| `fm`          | `auto`                     | desired image format            | `jpg`, `png`, `gif`, `auto`            |
+| `q`           | `80`                       | desired image quality           | `0` to `100`                           |
+| `m`           | `clip`                     | how the image should be resized | `crop`, `clip`, `fit`, `letterbox`     |
+| `bg`          | `ffffff`                   | letterbox background color      | `hex`                                  |
+| `fp-x`        | `0.5` or asset focal point | horizontal focus point          | `0` to `1`                             |
+| `fp-y`        | `0.5` or asset focal point | vertical focus point            | `0` to `1`                             |
 
 The `auto` format type will return a `webp` image when the server can generate the format and the client's browser supports the format.
 
