@@ -94,7 +94,7 @@ class Transform extends Component
         }
         else
         {
-            $masterImage = $asset->url;
+            $masterImage = $asset->getImageTransformSourcePath();
         }
         if ($masterImage)
         {
@@ -165,7 +165,7 @@ class Transform extends Component
             }
             else
             {
-                $masterImage = $asset->url;
+                $masterImage = $asset->getImageTransformSourcePath();
             }
         }
         else if (isset($params['path']))
