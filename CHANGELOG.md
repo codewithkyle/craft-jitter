@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Fixed
 
 - changed `$asset->url` to `$asset->getImageTransformSourcePath()` ([#3](https://github.com/codewithkyle/craft-jitter/issues/3))
+- changed file extension regex pattern from `/(\..*)$/` to `/(\..{1,4})$/` ([#3](https://github.com/codewithkyle/craft-jitter/issues/3))
 
 ## [1.1.0] - 2020-10-26
 
