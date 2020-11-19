@@ -94,7 +94,7 @@ class Transform extends Component
         }
         else
         {
-            $masterImage = $asset->url;
+            $masterImage = $asset->getImageTransformSourcePath();
         }
         if ($masterImage)
         {
@@ -165,7 +165,7 @@ class Transform extends Component
             }
             else
             {
-                $masterImage = $asset->url;
+                $masterImage = $asset->getImageTransformSourcePath();
             }
         }
         else if (isset($params['path']))
@@ -173,13 +173,13 @@ class Transform extends Component
             $masterImage = $params['path'];
         }
 
-        preg_match("/(\..*)$/", $asset->filename, $matches);
+        preg_match("/(\..{1,4})$/", $asset->filename, $matches);
         $baseType = strtolower(ltrim($matches[0], "."));
 
         // Build transform details
         $transform = $this->getImageTransformSettings($params, $masterImage, $asset);
         $uid = $this->buildTransformUid($transform);
-        $filename = preg_replace("/(\..*)$/", '', $asset->filename) . '-' . $uid;
+        $filename = preg_replace("/(\..{1,4})$/", '', $asset->filename) . '-' . $uid;
 
         // Create S3 client (if possible)
         $settings = [];
@@ -225,7 +225,7 @@ class Transform extends Component
                 $cleanName = preg_replace("/.*\//", '', $cleanName);
                 $response['url'] = "/jitter/" . $cleanName;
                 $response['type'] = 'local';
-                preg_match("/(\..*)$/", $existingFile, $matches);
+                preg_match("/(\..{1,4})$/", $existingFile, $matches);
                 $contentType = ltrim($matches[0], ".");
                 switch ($contentType)
                 {
@@ -253,7 +253,7 @@ class Transform extends Component
         // Save the output
         if ($s3)
         {
-            preg_match("/(\..*)$/", $finalImage, $matches);
+            preg_match("/(\..{1,4})$/", $finalImage, $matches);
             $finalImageType = $matches[0];
             $uri = "/" . str_replace('\\', '/', $finalImage);
             $uri = preg_replace("/.*\//", '', $uri);
@@ -288,7 +288,7 @@ class Transform extends Component
             copy($finalImage, FileHelper::normalizePath($publicPath. DIRECTORY_SEPARATOR  . $cleanName));
             $response['url'] = "/jitter/" . $cleanName;
             $response['type'] = 'local';
-            preg_match("/(\..*)$/", $finalImage, $matches);
+            preg_match("/(\..{1,4})$/", $finalImage, $matches);
             $contentType = ltrim($matches[0], ".");
             switch ($contentType)
             {
