@@ -103,16 +103,3 @@ Transformation parameters:
 | `fp-y`        | `0.5` or asset focal point | vertical focus point            | `0` to `1`                             |
 
 The `auto` format type will return a `webp` image when the server can generate the format and the client's browser supports the format.
-
-## Roadmap
-
-- [x] Roadmap & API documentation
-- [x] Create image transformation service
-- [x] Create image transformation twig variable
-- [x] Add AWS S3 bucket support
-- [x] Add focus point parameters
-- [x] Add `srcset()` functionality
-- [x] Add cache clearing functionality
-    - [x] Delete local files
-    - [x] Delete S3 files
-- [x] Initial release
