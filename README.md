@@ -65,6 +65,27 @@ Requesting an image transformation via Twig:
 />
 ```
 
+Generating transformations via PHP:
+
+```php
+$jitter = new \codewithkyle\jitter\services\Transform();
+$src = "/jitter/v1/transform?id=" . $image->id . "&w=300&ar=1:1";
+$srcset = $jitter->generateSourceSet($image->id, [
+    [
+        "w" => 300,
+        "h" => 250,
+    ],
+    [
+        "w" => 768,
+        "ar" => "16:9",
+    ],
+    [
+        "w" => 1024,
+        "ar" => "16:9",
+    ],
+]);
+```
+
 Transformation parameters:
 
 | Parameter     | Default                    | Description                     | Valid options                          |
