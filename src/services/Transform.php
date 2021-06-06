@@ -20,7 +20,7 @@ use Imagine\Imagick\Imagick;
 use craft\helpers\FileHelper;
 use craft\helpers\StringHelper;
 use codewithkyle\jitter\Jitter;
-use codewithkyle\JitterCore\Jitter;
+use codewithkyle\JitterCore\Jitter as JitterCore;
 use codewithkyle\jitter\exceptions\JitterException;
 
 class Transform extends Component
@@ -121,8 +121,9 @@ class Transform extends Component
     {
         $masterImage = null;
         $asset = null;
-        $settings = this->getSettings();
+        $settings = $this->getSettings();
         $useS3 = $settings != null;
+        $needsCleanup = false;
         if (isset($params['id']))
         {
             $asset = Asset::find()->id($params['id'])->one();
@@ -133,6 +134,7 @@ class Transform extends Component
             else
             {
                 $masterImage = $asset->getCopyOfFile();
+                $needsCleanup = true;
             }
         }
         else if (isset($params['path']))
@@ -148,68 +150,68 @@ class Transform extends Component
             $this->fail(400, "'id' or 'path' required");
         }
 
-        $filename = $masterImage->filename ?? $masterImage;
-        preg_match("/(\..{1,4})$/", $asset->filename, $matches);
+        preg_match("/(\..{1,4})$/", $masterImage, $matches);
         $fallbackFormat = strtolower(ltrim($matches[0], "."));
 
-        if (!empty($asset))
-        {
-            $width = $masterImage->width;
-            $height = $masterImage->height;
-        }
-        else
-        {
-            $img = new Imagick($masterImage);
-            $width = $img->getImageWidth();
-            $height = $img->getImageHeight();
-        }
+        $img = new Imagick($masterImage);
+        $width = $img->getImageWidth();
+        $height = $img->getImageHeight();
 
-        $transformSettings = Jitter::BuildTransform($params, $width, $height, $fallbackFormat);
+        $transform = JitterCore::BuildTransform($params, $width, $height, $fallbackFormat);
 
         // $existingFile = $this->findExistingFile(Craft::$app->path->runtimePath, $filename, $transform['format'], $clientAcceptsWebp);
 
         $uid = StringHelper::UUID();
-        $tempImage = FileHelper::normalizePath($this->getTempPath() . "/" . $uid . "tmp");
+        $tempImage = FileHelper::normalizePath($this->getTempPath($settings) . "/" . $uid . ".tmp");
 
-        $assetPath = $masterImage->getPath() ?? $masterImage;
-        \copy($assetPath, $tempImage);
+        \copy($masterImage, $tempImage);
+        if ($needsCleanup)
+        {
+            \unlink($masterImage);
+        }
 
         $resizeOn = "width";
         if (isset($params["h"]) && !isset($params["w"]))
         {
             $resizeOn = "height";
         }
-        Jitter::TransformImage($tempImage, $transform, $resizeOn);
+        JitterCore::TransformImage($tempImage, $transform, $resizeOn);
 
-        $key = $this->buildTransformUid($transformSettings);
+        $key = $this->buildTransformUid($transform, $asset->uid ?? $masterImage);
 
         if ($useS3)
         {
             $s3 = $this->connectToS3($settings);
-            $file = $s3->putObject([
+            if (isset($settings['folder']))
+            {
+                $s3Key = $settings['folder'] . "/" . $key;
+            }
+            $s3->putObject([
                 'Bucket' => $settings['bucket'],
-                'Key' => $key,
+                'Key' => $s3Key,
                 'SourceFile' => $tempImage,
             ]);
-            touch(FileHelper::normalizePath($this->getTempPath() . "/" . $key));
+            touch(FileHelper::normalizePath($this->getTempPath($settings) . "/" . $key));
         }
         else
         {
             copy($tempImage, FileHelper::normalizePath($this->getPublicPath() . "/" . $key));
-            $file = [
-                "Body" => file_get_contents($tempImage),
-                "ContentType" => mime_content_type($tempImage),
-            ];
         }
+
+        $file = [
+            "Body" => file_get_contents($tempImage),
+            "ContentType" => mime_content_type($tempImage),
+            "Name" => $key,
+        ];
 
         \unlink($tempImage);
 
         return $file;
     }
 
-    private function buildTransformUid(array $transform): string
+    private function buildTransformUid(array $transform, string $uniqueValue): string
     {
-        $key = $transform['width'] . "-" . $transform['height'] . "-" . $transform['focusPoint'][0] . "-" . $transform['focusPoint'][1] . "-" . $transform["quality"] . "-" . $transform['background'] . "-" . $transform['mode'];
+        $key = $uniqueValue . $transform['width'] . "-" . $transform['height'] . "-" . $transform['focusPoint'][0] . "-" . $transform['focusPoint'][1] . "-" . $transform["quality"] . "-" . $transform['background'] . "-" . $transform['mode'];
         return \md5($key);
     }
 
@@ -218,7 +220,7 @@ class Transform extends Component
         throw new JitterException($statusCode, $error);
     }
 
-    private function getTempPath(): string
+    private function getTempPath(array $settings): string
 	{
 		$path = FileHelper::normalizePath(Craft::$app->path->runtimePath . '/jitter');
 		if (!file_exists($path)) {
@@ -227,7 +229,7 @@ class Transform extends Component
 		return $path;
 	}
 
-    private function connectToS3(arrya $settings)
+    private function connectToS3(array $settings)
     {
         return S3Client::factory([
             'credentials' => [
@@ -246,6 +248,10 @@ class Transform extends Component
         if (\file_exists($settingsPath))
         {
             $settings = include($settingsPath);
+            if (isset($settings["folder"]))
+            {
+                $settings["folder"] = trim($settings["folder"], "/");
+            }
         }
         return $settings;
     }
