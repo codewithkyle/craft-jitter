@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+### Fixed
+
+- fixed S3 ACL issues ([#6](https://github.com/codewithkyle/craft-jitter/issues/6))
+
+### Added
+
+- switched to Jitter Core ([#5](https://github.com/codewithkyle/craft-jitter/issues/5))
+
 ## [1.1.1] - 2020-11-19
 
 ### Fixed
