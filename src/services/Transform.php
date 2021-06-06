@@ -39,6 +39,7 @@ class Transform extends Component
             {
                 if ($value != '.' && $value != '..')
                 {
+                    // TODO: verify bucket cleanup works with new key setup
                     $key = "/" . str_replace('\\', '/', $value);
                     $key = preg_replace("/.*\//", '', $key);
                     if (isset($settings['folder']))
@@ -158,12 +159,12 @@ class Transform extends Component
         $height = $img->getImageHeight();
 
         $transform = JitterCore::BuildTransform($params, $width, $height, $fallbackFormat);
+        $key = $this->buildTransformUid($transform, $asset->uid ?? $masterImage);
 
-        // $existingFile = $this->findExistingFile(Craft::$app->path->runtimePath, $filename, $transform['format'], $clientAcceptsWebp);
+        // TODO: use $key to find out if we can respond with a file instead of preforming the transform
 
         $uid = StringHelper::UUID();
         $tempImage = FileHelper::normalizePath($this->getTempPath($settings) . "/" . $uid . ".tmp");
-
         \copy($masterImage, $tempImage);
         if ($needsCleanup)
         {
@@ -176,8 +177,6 @@ class Transform extends Component
             $resizeOn = "height";
         }
         JitterCore::TransformImage($tempImage, $transform, $resizeOn);
-
-        $key = $this->buildTransformUid($transform, $asset->uid ?? $masterImage);
 
         if ($useS3)
         {
@@ -211,7 +210,7 @@ class Transform extends Component
 
     private function buildTransformUid(array $transform, string $uniqueValue): string
     {
-        $key = $uniqueValue . $transform['width'] . "-" . $transform['height'] . "-" . $transform['focusPoint'][0] . "-" . $transform['focusPoint'][1] . "-" . $transform["quality"] . "-" . $transform['background'] . "-" . $transform['mode'];
+        $key = $uniqueValue . json_encode($transform);
         return \md5($key);
     }
 
