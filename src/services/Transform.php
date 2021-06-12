@@ -10,74 +10,51 @@
 
 namespace codewithkyle\jitter\services;
 
-use codewithkyle\jitter\Jitter;
-
+use Yii;
 use Craft;
+use Aws\S3\S3Client;
+use GuzzleHttp\Client;
 use craft\base\Component;
 use craft\elements\Asset;
 use Imagine\Imagick\Imagick;
 use craft\helpers\FileHelper;
-use Aws\S3\S3Client;
-use GuzzleHttp\Client;
-use Yii;
+use craft\helpers\StringHelper;
+use codewithkyle\jitter\Jitter;
+use codewithkyle\JitterCore\Jitter as JitterCore;
+use codewithkyle\jitter\exceptions\JitterException;
 
-/**
- * Transform Service
- *
- * All of your plugin’s business logic should go in services, including saving data,
- * retrieving data, etc. They provide APIs that your controllers, template variables,
- * and other plugins can interact with.
- *
- * https://craftcms.com/docs/plugins/services
- *
- * @author    Kyle Andrews
- * @package   Jitter
- * @since     1.0.0
- */
 class Transform extends Component
 {
     // Public Methods
     // =========================================================================
 
-    public function clearS3BucketCache(string $dirname)
+    public function clearS3BucketCache()
     {
-        $settings = [];
-        $settingsPath = FileHelper::normalizePath(Craft::$app->path->configPath . '/jitter.php');
-        if (\file_exists($settingsPath))
+        $settings = $this->getSettings();
+        if (!empty($settings))
         {
-            $settings = include($settingsPath);
-        }
-        if (isset($settings['accessKey']) && isset($settings['secretAccessKey']) && isset($settings['region']) && isset($settings['bucket']))
-        {
-            $s3 = S3Client::factory([
-                'credentials' => [
-                    'key'    => $settings['accessKey'],
-                    'secret' => $settings['secretAccessKey'],
-                ],
-                'region' => $settings['region'],
-                'version' => 'latest'
-            ]);
-
-            $files = \scandir($dirname);
-            foreach ($files as $key => $value)
+            $dirname = $this->getTempPath();
+            if (\file_exists($dirname))
             {
-                if ($value != '.' && $value != '..')
+                $s3 = $this->connectToS3($settings);
+                $files = \scandir($dirname);
+                foreach ($files as $key => $value)
                 {
-                    $uri = "/" . str_replace('\\', '/', $value);
-                    $uri = preg_replace("/.*\//", '', $uri);
-                    if (isset($settings['folder']))
+                    if ($value != '.' && $value != '..')
                     {
-                        $uri = trim($settings['folder'], "/") . "/"  . ltrim($uri, "/");
+                        $s3Key = $value;
+                        if (isset($settings['folder']))
+                        {
+                            $s3Key = $settings['folder'] . "/" . $value;
+                        }
+                        $s3->deleteObject([
+                            'Bucket' => $settings['bucket'],
+                            'Key'    => $s3Key,
+                        ]);
+                        unlink(FileHelper::normalizePath($dirname . "/" . $value));
                     }
-                    $s3->deleteObject([
-                        'Bucket' => $settings['bucket'],
-                        'Key'    => $uri,
-                    ]);
-                    unlink(FileHelper::normalizePath($dirname . "/" . $value));
                 }
             }
-
-            rmdir($dirname);
         }
     }
 
@@ -85,7 +62,7 @@ class Transform extends Component
     {        
         $masterImage = null;
         $ret = "";
-        $baseUrl = "/actions/jitter/transform/image?id=" . $id;
+        $baseUrl = "/jitter/v1/transform?id=" . $id;
 
         $asset = Asset::find()->id($id)->one();
         if (empty($asset))
@@ -94,12 +71,7 @@ class Transform extends Component
         }
         else
         {
-            $path = $asset->getImageTransformSourcePath();
-            if (!\file_exists($path))
-            {
-                $path = $asset->url;
-            }
-            $masterImage = $path;
+            $masterImage = $asset->getCopyOfFile();
         }
         if ($masterImage)
         {
@@ -148,488 +120,190 @@ class Transform extends Component
         return $ret;
     }
 
-    public function transformImage(array $params, bool $clientAcceptsWebp): array
+    public function transformImage(array $params, bool $clientAcceptsWebp)
     {
-        $response = [
-            'success' => true,
-            'error' => null,
-            'url' => null,
-            'type' => null,
-        ];
-        
         $masterImage = null;
         $asset = null;
+        $settings = $this->getSettings();
+        $needsCleanup = false;
         if (isset($params['id']))
         {
             $asset = Asset::find()->id($params['id'])->one();
             if (empty($asset))
             {
-                $response['success'] = false;
-                $response['error'] = 'Failed to find asset with an id of ' . $params['id'];
-                return $response;
+                $this->fail(404, "Image with id " . $params["id"] . " does not exist.");
             }
             else
             {
-                $path = $asset->getImageTransformSourcePath();
-                if (!\file_exists($path))
-                {
-                    $path = $asset->url;
-                }
-                $masterImage = $path;
+                $masterImage = $asset->getCopyOfFile();
+                $needsCleanup = true;
             }
         }
         else if (isset($params['path']))
         {
-            $masterImage = $params['path'];
+            $masterImage = FileHelper::normalizePath(Yii::getAlias("@webroot") . "/" . ltrim($params['path'], "/"));
+            if (!\file_exists($masterImage))
+            {
+                $this->fail(404, "Invalid image location: " . $masterImage);
+            }
+        }
+        else
+        {
+            $this->fail(400, "'id' or 'path' required");
         }
 
-        preg_match("/(\..{1,4})$/", $asset->filename, $matches);
-        $baseType = strtolower(ltrim($matches[0], "."));
+        preg_match("/(\..{1,4})$/", $masterImage, $matches);
+        $fallbackFormat = strtolower(ltrim($matches[0], "."));
 
-        // Build transform details
-        $transform = $this->getImageTransformSettings($params, $masterImage, $asset);
-        $uid = $this->buildTransformUid($transform);
-        $filename = preg_replace("/(\..{1,4})$/", '', $asset->filename) . '-' . $uid;
+        $img = new Imagick($masterImage);
+        $width = $img->getImageWidth();
+        $height = $img->getImageHeight();
 
-        // Create S3 client (if possible)
-        $settings = [];
+        $transform = JitterCore::BuildTransform($params, $width, $height, $fallbackFormat);
+        $key = $this->buildTransformUid($transform, $asset->uid ?? $masterImage);
+
+        $cachedResponse = $this->checkCache($settings, $key);
+        if (!empty($cachedResponse))
+        {
+            return $cachedResponse;
+        }
+
+        $uid = StringHelper::UUID();
+        $tempImage = FileHelper::normalizePath($this->getTempPath() . "/" . $uid . ".tmp");
+        \copy($masterImage, $tempImage);
+        if ($needsCleanup)
+        {
+            \unlink($masterImage);
+        }
+
+        $resizeOn = "width";
+        if (isset($params["h"]) && !isset($params["w"]))
+        {
+            $resizeOn = "height";
+        }
+        JitterCore::TransformImage($tempImage, $transform, $resizeOn);
+
+        $this->cacheImage($settings, $key, $tempImage);
+
+        $file = [
+            "Body" => \file_get_contents($tempImage),
+            "ContentType" => \mime_content_type($tempImage),
+            "Name" => $key,
+        ];
+
+        \unlink($tempImage);
+
+        return $file;
+    }
+
+    private function buildTransformUid(array $transform, string $uniqueValue): string
+    {
+        $key = $uniqueValue . json_encode($transform);
+        return \md5($key);
+    }
+
+    private function fail(int $statusCode, string $error): void
+    {
+        throw new JitterException($statusCode, $error);
+    }
+
+    private function getTempPath(): string
+	{
+		$path = FileHelper::normalizePath(Craft::$app->path->runtimePath . '/jitter');
+		if (!file_exists($path)) {
+			mkdir($path);
+		}
+		return $path;
+	}
+
+    private function connectToS3(array $settings)
+    {
+        return S3Client::factory([
+            'credentials' => [
+                'key'    => $settings['accessKey'],
+                'secret' => $settings['secretAccessKey'],
+            ],
+            'region' => $settings['region'],
+            'version' => 'latest'
+        ]);
+    }
+
+    private function getSettings()
+    {
+        $settings = null;
         $settingsPath = FileHelper::normalizePath(Craft::$app->path->configPath . '/jitter.php');
         if (\file_exists($settingsPath))
         {
             $settings = include($settingsPath);
+            if (isset($settings["folder"]))
+            {
+                $settings["folder"] = trim($settings["folder"], "/");
+            }
         }
-        $s3 = null;
-        if (isset($settings['accessKey']) && isset($settings['secretAccessKey']) && isset($settings['region']) && isset($settings['bucket']))
-        {
-            $s3 = S3Client::factory([
-                'credentials' => [
-                    'key'    => $settings['accessKey'],
-                    'secret' => $settings['secretAccessKey'],
-                ],
-                'region' => $settings['region'],
-                'version' => 'latest'
-            ]);
-        }
+        return $settings;
+    }
 
-        // Quickly respond with existing files
-        if ($s3)
+    private function getPublicPath(): string
+    {
+        $path = FileHelper::normalizePath(Yii::getAlias("@webroot") . '/jitter');
+        if (!file_exists($path))
         {
-            $existingFile = $this->findExistingFile(Craft::$app->path->runtimePath, $filename, $transform['format'], $clientAcceptsWebp);   
-            if ($existingFile){
-                $uri = "/" . str_replace('\\', '/', $existingFile);
-                $uri = preg_replace("/.*\//", '', $uri);
+            mkdir($path);
+        }
+        return $path;
+    }
+
+    private function checkCache($settings, string $key): array
+    {
+        $response = [];
+        if (!empty($settings))
+        {
+            $path = FileHelper::normalizePath($this->getTempPath() . "/" . $key);
+            if (\file_exists($path))
+            {
+                $s3 = $this->connectToS3($settings);
                 if (isset($settings['folder']))
                 {
-                    $uri = trim($settings['folder'], "/") . "/"  . ltrim($uri, "/");
+                    $key = $settings['folder'] . "/" . $key;
                 }
-                $response['url'] = $s3->getObjectUrl($settings['bucket'], $uri);
-                $response['type'] = 'external';
-                return $response;
+                $response = $s3->getObject([
+                    "Bucket" => getenv("S3_BUCKET"),
+                    "Key" => $key,
+                ]);
             }
         }
         else
         {
-            $existingFile = $this->findExistingFile(Yii::getAlias('@webroot'), $filename, $transform['format'], $clientAcceptsWebp);
-            if ($existingFile){
-                $cleanName = DIRECTORY_SEPARATOR . str_replace('\\', '/', $existingFile);
-                $cleanName = preg_replace("/.*\//", '', $cleanName);
-                $response['url'] = "/jitter/" . $cleanName;
-                $response['type'] = 'local';
-                preg_match("/(\..{1,4})$/", $existingFile, $matches);
-                $contentType = ltrim($matches[0], ".");
-                switch ($contentType)
-                {
-                    case "webp":
-                        $response['contentType'] = "image/webp";
-                        break;
-                    case "png":
-                        $response['contentType'] = "image/png";
-                        break;
-                    case "gif":
-                        $response['contentType'] = "image/gif";
-                        break;
-                    case "jpg":
-                        $response['contentType'] = "image/jpeg";
-                        break;
-                }
-                return $response;
+            $path = FileHelper::normalizePath($this->getPublicPath() . "/" . $key);
+            if (\file_exists($path))
+            {
+                $response["Body"] = \file_get_contents($path);
+                $response["Name"] = $key;
+                $response["ContentType"] = \mime_content_type($path);
             }
         }
-
-        // Do the things
-        $tempImage = $this->transform($masterImage, $baseType, $transform, $params);
-        $finalImage = $this->convertImage($tempImage, $filename, $baseType, $clientAcceptsWebp, $transform);
-
-        // Save the output
-        if ($s3)
-        {
-            preg_match("/(\..{1,4})$/", $finalImage, $matches);
-            $finalImageType = $matches[0];
-            $uri = "/" . str_replace('\\', '/', $finalImage);
-            $uri = preg_replace("/.*\//", '', $uri);
-            if (isset($settings['folder']))
-            {
-                $uri = trim($settings['folder'], "/") . "/" . ltrim($uri, "/");
-            }
-            $s3Response = $s3->putObject([
-                'Bucket' => $settings['bucket'],
-                'Key' => $uri,
-                'SourceFile' => $finalImage,
-                'ACL' => 'public-read',
-            ]);
-            $jitterCachePath = FileHelper::normalizePath(Craft::$app->path->runtimePath . '/jitter');
-            if (!file_exists($jitterCachePath))
-            {
-                mkdir($jitterCachePath);
-            }
-            touch(FileHelper::normalizePath($jitterCachePath . DIRECTORY_SEPARATOR . $filename. $finalImageType));
-            $response['url'] = $s3Response['ObjectURL'];
-            $response['type'] = 'external';
-        }
-        else
-        {
-            $publicPath = FileHelper::normalizePath(Yii::getAlias("@webroot") . '/jitter');
-            if (!file_exists($publicPath))
-            {
-                mkdir($publicPath);
-            }
-            $cleanName = DIRECTORY_SEPARATOR . str_replace('\\', '/', $finalImage);
-            $cleanName = preg_replace("/.*\//", '', $cleanName);
-            copy($finalImage, FileHelper::normalizePath($publicPath. DIRECTORY_SEPARATOR  . $cleanName));
-            $response['url'] = "/jitter/" . $cleanName;
-            $response['type'] = 'local';
-            preg_match("/(\..{1,4})$/", $finalImage, $matches);
-            $contentType = ltrim($matches[0], ".");
-            switch ($contentType)
-            {
-                case "webp":
-                    $response['contentType'] = "image/webp";
-                    break;
-                case "png":
-                    $response['contentType'] = "image/png";
-                    break;
-                case "gif":
-                    $response['contentType'] = "image/gif";
-                    break;
-                case "jpg":
-                    $response['contentType'] = "image/jpeg";
-                    break;
-            }
-        }
-
-        // Cleanup
-        unlink($tempImage);
-        unlink($finalImage);
-
         return $response;
     }
 
-    private function buildTransformUid(array $transform): string
+    private function cacheImage($settings, $key, $image): void
     {
-        $key = $transform['width'] . "-" . $transform['height'] . "-" . $transform['focusPoint'][0] . "-" . $transform['focusPoint'][1] . "-" . $transform["quality"] . "-" . $transform['background'] . "-" . $transform['mode'];
-        return \md5($key);
-    }
-
-    private function findExistingFile(string $path, string $filename, string $format, bool $clientAcceptsWebp)
-    {
-        $fileTypes = ['webp', 'png', 'jpg', 'gif'];
-        $existingFile = null;
-        foreach ($fileTypes as $fileType)
+        if (!empty($settings))
         {
-            $file = FileHelper::normalizePath($path . '/jitter/' . $filename . "." . $fileType);
-            if (file_exists($file))
+            $s3 = $this->connectToS3($settings);
+            if (isset($settings['folder']))
             {
-                if ($format != 'auto')
-                {
-                    if ($format == $fileType)
-                    {
-                        $existingFile = $file;
-                        break;
-                    }
-                }
-                else
-                {
-                    if ($fileType != 'webp')
-                    {
-                        $existingFile = $file;
-                        break;
-                    }
-                    else if ($clientAcceptsWebp)
-                    {
-                        $existingFile = $file;
-                        break;
-                    }
-                }
+                $s3Key = $settings['folder'] . "/" . $key;
             }
-        }
-        return $existingFile;
-    }
-
-    private function convertImage(string $tempImage, string $filename, string $baseType, bool $clientAcceptsWebp, array $transform): string
-    {
-        $tempPath = Craft::$app->path->tempPath;
-        $img = new Imagick($tempImage);
-        $finalImage = null;
-        switch ($transform['format'])
-        {
-            case "jpg":
-                $img->setImageFormat("jpeg");
-                $img->setImageCompressionQuality($transform['quality']);
-                $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".jpg";
-                $img->writeImage($finalImage);
-                break;
-            case "gif":
-                $img->setImageFormat("gif");
-                $img->setImageCompressionQuality($transform['quality']);
-                $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".gif";
-                $img->writeImage($finalImage);
-                break;
-            case "png":
-                $img->setImageFormat("png");
-                $img->setImageCompressionQuality($transform['quality']);
-                $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".png";
-                $img->writeImage($finalImage);
-                break;
-            default:
-                if ($clientAcceptsWebp && (\count(\Imagick::queryFormats('WEBP')) > 0) || $clientAcceptsWebp && file_exists("/usr/bin/cjpeg"))
-                {
-                    if ((\count(\Imagick::queryFormats('WEBP')) > 0))
-                    {
-                        $img->setImageFormat("webp");
-                        $img->setImageCompressionQuality($transform['quality']);
-                        $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".webp";
-                        $img->writeImage($finalImage);
-                    }
-                    else if (file_exists("/usr/bin/cwebp"))
-                    {
-                        $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . '.webp';
-                        $command = escapeshellcmd("/usr/bin/cwebp -q " . $transform['quality'] . " " . $tempImage . " -o " . $finalImage);
-                        shell_exec($command);
-                    }
-                }
-                else 
-                {
-                    switch ($baseType)
-                    {
-                        case "jpg":
-                            $img->setImageFormat("jpeg");
-                            $img->setImageCompressionQuality($transform['quality']);
-                            $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".jpg";
-                            $img->writeImage($finalImage);
-                            break;
-                        case "jpeg":
-                            $img->setImageFormat("jpeg");
-                            $img->setImageCompressionQuality($transform['quality']);
-                            $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".jpg";
-                            $img->writeImage($finalImage);
-                            break;
-                        case "gif":
-                            $img->setImageFormat("gif");
-                            $img->setImageCompressionQuality($transform['quality']);
-                            $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".gif";
-                            $img->writeImage($finalImage);
-                        break;
-                        default:
-                            $img->setImageFormat("png");
-                            $img->setImageCompressionQuality($transform['quality']);
-                            $finalImage = $tempPath . DIRECTORY_SEPARATOR . $filename . ".png";
-                            $img->writeImage($finalImage);
-                            break;
-                    }
-                    break;
-                }
-                break;
-        }
-        return $finalImage;
-    }
-
-    private function transform(string $path, string $baseType, array $transform, array $params): string
-    {
-        $helper = new \craft\helpers\StringHelper();
-        $uid = str_replace('-', '', $helper->UUID());
-
-        $img = new Imagick($path);
-        $img->setImageCompression(Imagick::COMPRESSION_NO);
-        $img->setImageCompressionQuality(100);
-        $img->setOption('png:compression-level', 9);
-
-        switch ($transform['mode'])
-        {
-            case "fit":
-                $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
-                $tempPath = Craft::$app->path->tempPath;
-                $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
-                $img->writeImage($tempImage);
-                break;
-            case "letterbox":
-                $img->setImageBackgroundColor('#' . $transform['background']);
-                $img->thumbnailImage($transform['width'], $transform['height'], true, true);
-                $tempPath = Craft::$app->path->tempPath;
-                $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
-                $img->writeImage($tempImage);
-                break;
-            case "crop":
-                // Get focus points
-                $leftPos = floor($img->getImageWidth() * $transform['focusPoint'][0]) - floor($transform['width'] / 2);
-                $topPos = floor($img->getImageHeight() * $transform['focusPoint'][1]) - floor($transform['height'] / 2);
-
-                // Step 2: crop
-                $img->cropImage($transform['width'], $transform['height'], $leftPos, $topPos);
-
-                $tempPath = Craft::$app->path->tempPath;
-                $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
-                $img->writeImage($tempImage);
-                break;
-            default:
-                if (isset($params['w']) && isset($params['h']) || !isset($params['w']) && !isset($params['h']))
-                {
-                    if ($transform['width'] < $transform['height'])
-                    {
-                        $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
-                    }
-                    else if ($transform['height'] < $transform['width'])
-                    {
-                        $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
-                    }
-                    else
-                    {
-                        $rawWidth = $img->getImageWidth();
-                        $rawHeight = $img->getImageHeight();
-                        if ($rawWidth < $rawHeight)
-                        {
-                            $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
-                        }
-                        else if ($rawHeight < $rawWidth)
-                        {
-                            $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
-                        }
-                        else
-                        {
-                            $img->resizeImage($transform['width'], $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
-                        }
-                    }
-                }
-                else
-                {
-                    if (isset($params['w']))
-                    {
-                        $img->resizeImage($transform['width'], null, Imagick::FILTER_LANCZOS, 0.75);
-                    }
-                    else
-                    {
-                        $img->resizeImage(null, $transform['height'], Imagick::FILTER_LANCZOS, 0.75);
-                    }
-                }
-
-                // Get focus points
-                $leftPos = floor($img->getImageWidth() * $transform['focusPoint'][0]) - floor($transform['width'] / 2);
-                $topPos = floor($img->getImageHeight() * $transform['focusPoint'][1]) - floor($transform['height'] / 2);
-
-                // Step 2: crop
-                $img->cropImage($transform['width'], $transform['height'], $leftPos, $topPos);
-
-                $tempPath = Craft::$app->path->tempPath;
-                $tempImage = $tempPath . DIRECTORY_SEPARATOR . $uid . "." . $baseType;
-                $img->writeImage($tempImage);
-                break;
-        }
-
-        return $tempImage;
-    }
-
-    private function getImageTransformSettings(array $params, string $path, Asset $asset): array
-    {
-        $img = new Imagick($path);
-
-        $aspectRatioValues = [$img->getImageWidth(), $img->getImageHeight()];
-        if (isset($params['ar']))
-        {
-            $values = explode(':', $params['ar']);
-            if (count($values) == 2)
-            {
-                $aspectRatioValues = [intval($values[0]), intval($values[1])];
-            }
-        }
-
-        $width = $img->getImageWidth();
-        $height = $img->getImageHeight();
-        if (isset($params['w']) && isset($params['h']))
-        {
-            $width = intval($params['w']);
-            $height = intval($params['h']);
-        }
-        else if (isset($params['w']))
-        {
-            $width = intval($params['w']);
-            $height = ($aspectRatioValues[1] / $aspectRatioValues[0]) * $width;
-        }
-        else if (isset($params['h']))
-        {
-            $height = intval($params['h']);
-            $width = ($aspectRatioValues[0] / $aspectRatioValues[1]) * $height;
-        }
-        
-        $quality = 80;
-        if (isset($params['q']))
-        {
-            $quality = intval($params['q']);
-        }
-
-        $mode = 'clip';
-        if (isset($params['m']))
-        {
-            $mode = $params['m'];
-        }
-
-        $bg = 'ffffff';
-        if (isset($params['bg']))
-        {
-            $bg = ltrim($params['bg'], '#');
-        }
-
-        $focusPoints = [];
-        if (isset($params['fp-x']) && isset($params['fp-y']))
-        {
-            $focusPoints[0] = floatval($params['fp-x']);
-            if ($focusPoints[0] < 0)
-            {
-                $focusPoints[0] = 0;
-            }
-            if ($focusPoints[0] > 1)
-            {
-                $focusPoints[0] = 1;
-            }
-            
-            $focusPoints[1] = floatval($params['fp-y']);
-            if ($focusPoints[1] < 0)
-            {
-                $focusPoints[1] = 0;
-            }
-            if ($focusPoints[1] > 1)
-            {
-                $focusPoints[1] = 1;
-            }
-        }
-        else if (!is_null($asset) && $asset->hasFocalPoint)
-        {
-            $assetFocalPoint = $asset->getFocalPoint();
-            $focusPoints[0] = floatval($assetFocalPoint['x']);
-            $focusPoints[1] = floatval($assetFocalPoint['y']);
+            $s3->putObject([
+                'Bucket' => $settings['bucket'],
+                'Key' => $s3Key,
+                'SourceFile' => $image,
+            ]);
+            touch(FileHelper::normalizePath($this->getTempPath() . "/" . $key));
         }
         else
         {
-            $focusPoints = [0.5, 0.5];
+            copy($image, FileHelper::normalizePath($this->getPublicPath() . "/" . $key));
         }
-
-        $transform = [
-            'width' => round($width),
-            'height' => round($height),
-            'format' => $params['fm'] ?? 'auto',
-            'mode' => $mode,
-            'quality' => $quality,
-            'background' => $bg,
-            'focusPoint' => $focusPoints
-        ];
-        return $transform;
     }
 }

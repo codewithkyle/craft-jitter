@@ -17,27 +17,8 @@ use craft\web\Controller;
 use craft\helpers\FileHelper;
 use Yii;
 use yii\web\Response;
+use codewithkyle\jitter\exceptions\JitterException;
 
-/**
- * Transform Controller
- *
- * Generally speaking, controllers are the middlemen between the front end of
- * the CP/website and your plugin’s services. They contain action methods which
- * handle individual tasks.
- *
- * A common pattern used throughout Craft involves a controller action gathering
- * post data, saving it on a model, passing the model off to a service, and then
- * responding to the request appropriately depending on the service method’s response.
- *
- * Action methods begin with the prefix “action”, followed by a description of what
- * the method does (for example, actionSaveIngredient()).
- *
- * https://craftcms.com/docs/plugins/controllers
- *
- * @author    Kyle Andrews
- * @package   Jitter
- * @since     1.0.0
- */
 class TransformController extends Controller
 {
 
@@ -59,26 +40,21 @@ class TransformController extends Controller
         $request = Craft::$app->getRequest();
         $params = $request->getQueryParams();
         $clientAcceptsWebp = $request->accepts('image/webp');
-        $imageDetails = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
-        if ($imageDetails['success'])
+        try
         {
-            if ($imageDetails['type'] == 'external')
+            $file = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
+            $response = Craft::$app->getResponse();
+            $response->format = Response::FORMAT_RAW;
+            if (isset($file["ContentType"]))
             {
-                return Craft::$app->getResponse()->redirect($imageDetails['url']);
+                $response->headers->set("Content-Type", $file["ContentType"]);
             }
-            else
-            {
-                $filePath = rtrim(Yii::getAlias("@webroot"), "/") . DIRECTORY_SEPARATOR . trim($imageDetails['url'], "/");
-                $response = Craft::$app->getResponse();
-                $response->headers->set("Content-Type", $imageDetails['contentType']);
-                $response->format = Response::FORMAT_RAW;
-                $response->stream = fopen($filePath, 'r');
-                return $response->send();
-            }
+            return $response->sendContentAsFile($file["Body"], $file["Name"], ["inline" => true]);
         }
-        else
+        catch (JitterException $e)
         {
-            return Craft::$app->getResponse()->setStatusCode(404);
+            Craft::$app->getResponse()->setStatusCode($e->getStatusCode());
+			return $e->getMessage();
         }
     }
 }
