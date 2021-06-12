@@ -109,13 +109,12 @@ class Jitter extends Plugin
                     'key' => 'jitter-transform-cache',
                     'label' => Craft::t('jitter', 'Transformed images'),
                     'action' => function() {
-                        Jitter::getInstance()->transform->clearS3BucketCache($s3MasterCache);
+                        Jitter::getInstance()->transform->clearS3BucketCache();
 
                         $publicDir = FileHelper::normalizePath(Yii::getAlias('@webroot') . "/jitter");
                         if (\file_exists($publicDir))
                         {
                             array_map('unlink', glob("$publicDir/*"));
-                            rmdir($publicDir);
                         }
                     }
                 ];

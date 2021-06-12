@@ -28,29 +28,31 @@ class Transform extends Component
     // Public Methods
     // =========================================================================
 
-    public function clearS3BucketCache(string $dirname)
+    public function clearS3BucketCache()
     {
         $settings = $this->getSettings();
-        if ($settings != null && isset($settings['accessKey']) && isset($settings['secretAccessKey']) && isset($settings['region']) && isset($settings['bucket']))
+        if (!empty($settings))
         {
-            $s3 = $this->connectToS3();
-            $files = \scandir($dirname);
-            foreach ($files as $key => $value)
+            $dirname = $this->getTempPath();
+            if (\file_exists($dirname))
             {
-                if ($value != '.' && $value != '..')
+                $s3 = $this->connectToS3($settings);
+                $files = \scandir($dirname);
+                foreach ($files as $key => $value)
                 {
-                    // TODO: verify bucket cleanup works with new key setup
-                    $key = "/" . str_replace('\\', '/', $value);
-                    $key = preg_replace("/.*\//", '', $key);
-                    if (isset($settings['folder']))
+                    if ($value != '.' && $value != '..')
                     {
-                        $uri = trim($settings['folder'], "/") . "/"  . ltrim($key, "/");
+                        $s3Key = $value;
+                        if (isset($settings['folder']))
+                        {
+                            $s3Key = $settings['folder'] . "/" . $value;
+                        }
+                        $s3->deleteObject([
+                            'Bucket' => $settings['bucket'],
+                            'Key'    => $s3Key,
+                        ]);
+                        unlink(FileHelper::normalizePath($dirname . "/" . $value));
                     }
-                    $s3->deleteObject([
-                        'Bucket' => $settings['bucket'],
-                        'Key'    => $key,
-                    ]);
-                    unlink(FileHelper::normalizePath($dirname . "/" . $value));
                 }
             }
         }
@@ -123,7 +125,6 @@ class Transform extends Component
         $masterImage = null;
         $asset = null;
         $settings = $this->getSettings();
-        $useS3 = $settings != null;
         $needsCleanup = false;
         if (isset($params['id']))
         {
@@ -161,10 +162,14 @@ class Transform extends Component
         $transform = JitterCore::BuildTransform($params, $width, $height, $fallbackFormat);
         $key = $this->buildTransformUid($transform, $asset->uid ?? $masterImage);
 
-        // TODO: use $key to find out if we can respond with a file instead of preforming the transform
+        $cachedResponse = $this->checkCache($settings, $key);
+        if (!empty($cachedResponse))
+        {
+            return $cachedResponse;
+        }
 
         $uid = StringHelper::UUID();
-        $tempImage = FileHelper::normalizePath($this->getTempPath($settings) . "/" . $uid . ".tmp");
+        $tempImage = FileHelper::normalizePath($this->getTempPath() . "/" . $uid . ".tmp");
         \copy($masterImage, $tempImage);
         if ($needsCleanup)
         {
@@ -178,28 +183,11 @@ class Transform extends Component
         }
         JitterCore::TransformImage($tempImage, $transform, $resizeOn);
 
-        if ($useS3)
-        {
-            $s3 = $this->connectToS3($settings);
-            if (isset($settings['folder']))
-            {
-                $s3Key = $settings['folder'] . "/" . $key;
-            }
-            $s3->putObject([
-                'Bucket' => $settings['bucket'],
-                'Key' => $s3Key,
-                'SourceFile' => $tempImage,
-            ]);
-            touch(FileHelper::normalizePath($this->getTempPath($settings) . "/" . $key));
-        }
-        else
-        {
-            copy($tempImage, FileHelper::normalizePath($this->getPublicPath() . "/" . $key));
-        }
+        $this->cacheImage($settings, $key, $tempImage);
 
         $file = [
-            "Body" => file_get_contents($tempImage),
-            "ContentType" => mime_content_type($tempImage),
+            "Body" => \file_get_contents($tempImage),
+            "ContentType" => \mime_content_type($tempImage),
             "Name" => $key,
         ];
 
@@ -219,7 +207,7 @@ class Transform extends Component
         throw new JitterException($statusCode, $error);
     }
 
-    private function getTempPath(array $settings): string
+    private function getTempPath(): string
 	{
 		$path = FileHelper::normalizePath(Craft::$app->path->runtimePath . '/jitter');
 		if (!file_exists($path)) {
@@ -263,5 +251,59 @@ class Transform extends Component
             mkdir($path);
         }
         return $path;
+    }
+
+    private function checkCache($settings, string $key): array
+    {
+        $response = [];
+        if (!empty($settings))
+        {
+            $path = FileHelper::normalizePath($this->getTempPath() . "/" . $key);
+            if (\file_exists($path))
+            {
+                $s3 = $this->connectToS3($settings);
+                if (isset($settings['folder']))
+                {
+                    $key = $settings['folder'] . "/" . $key;
+                }
+                $response = $s3->getObject([
+                    "Bucket" => getenv("S3_BUCKET"),
+                    "Key" => $key,
+                ]);
+            }
+        }
+        else
+        {
+            $path = FileHelper::normalizePath($this->getPublicPath() . "/" . $key);
+            if (\file_exists($path))
+            {
+                $response["Body"] = \file_get_contents($path);
+                $response["Name"] = $key;
+                $response["ContentType"] = \mime_content_type($path);
+            }
+        }
+        return $response;
+    }
+
+    private function cacheImage($settings, $key, $image): void
+    {
+        if (!empty($settings))
+        {
+            $s3 = $this->connectToS3($settings);
+            if (isset($settings['folder']))
+            {
+                $s3Key = $settings['folder'] . "/" . $key;
+            }
+            $s3->putObject([
+                'Bucket' => $settings['bucket'],
+                'Key' => $s3Key,
+                'SourceFile' => $image,
+            ]);
+            touch(FileHelper::normalizePath($this->getTempPath() . "/" . $key));
+        }
+        else
+        {
+            copy($image, FileHelper::normalizePath($this->getPublicPath() . "/" . $key));
+        }
     }
 }
