@@ -65,6 +65,27 @@ Requesting an image transformation via Twig:
 />
 ```
 
+Generating transformations via PHP:
+
+```php
+$jitter = new \codewithkyle\jitter\services\Transform();
+$src = "/jitter/v1/transform?id=" . $image->id . "&w=300&ar=1:1";
+$srcset = $jitter->generateSourceSet($image->id, [
+    [
+        "w" => 300,
+        "h" => 250,
+    ],
+    [
+        "w" => 768,
+        "ar" => "16:9",
+    ],
+    [
+        "w" => 1024,
+        "ar" => "16:9",
+    ],
+]);
+```
+
 Transformation parameters:
 
 | Parameter     | Default                    | Description                     | Valid options                          |
@@ -82,16 +103,3 @@ Transformation parameters:
 | `fp-y`        | `0.5` or asset focal point | vertical focus point            | `0` to `1`                             |
 
 The `auto` format type will return a `webp` image when the server can generate the format and the client's browser supports the format.
-
-## Roadmap
-
-- [x] Roadmap & API documentation
-- [x] Create image transformation service
-- [x] Create image transformation twig variable
-- [x] Add AWS S3 bucket support
-- [x] Add focus point parameters
-- [x] Add `srcset()` functionality
-- [x] Add cache clearing functionality
-    - [x] Delete local files
-    - [x] Delete S3 files
-- [x] Initial release
