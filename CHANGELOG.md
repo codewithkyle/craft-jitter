@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+## [1.2.0] - 2021-06-19
+
+### Fixed
+
+- `craft.jitter.transformImage()` bug ([#9](https://github.com/codewithkyle/craft-jitter/issues/9))
+- S3 bucket config bug
+- `craft.jitter.srcset()` removes the temp files it creates
+
 ## [1.2.0] - 2021-06-12
 
 ### Fixed
@@ -49,7 +57,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - delete local files
     - delete S3 files
 
-[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/codewithkyle/craft-jitter/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/codewithkyle/craft-jitter/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/codewithkyle/craft-jitter/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/codewithkyle/craft-jitter/compare/v1.0.0...v1.1.0

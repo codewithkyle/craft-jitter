@@ -58,6 +58,38 @@ class Transform extends Component
         }
     }
 
+    public function generateURL(array $params): string
+    {
+        $ret = "/jitter/v1/transform?";
+        $asset = Asset::find()->id($params["id"])->one();
+        if (empty($asset))
+        {
+            Craft::error("Failed to find asset with an id of " . $id, __METHOD__);
+        }
+        else
+        {
+            $masterImage = $asset->getCopyOfFile();
+        }
+        if ($masterImage)
+        {
+            $isFrist = true;
+            foreach ($params as $key => $value)
+            {
+                if ($isFrist)
+                {
+                    $ret .= $key . "=" . $value;
+                }
+                else
+                {
+                    $ret .= "&" . $key . "=" . $value;
+                }
+                $isFrist = false;
+            }
+            \unlink($masterImage);
+        }
+        return $ret;
+    }
+
     public function generateSourceSet(string $id, array $images): string
     {        
         $masterImage = null;
@@ -116,6 +148,7 @@ class Transform extends Component
                     $ret .= ", ";
                 }
             }
+            \unlink($masterImage);
         }
         return $ret;
     }
@@ -262,14 +295,18 @@ class Transform extends Component
             if (\file_exists($path))
             {
                 $s3 = $this->connectToS3($settings);
+                $s3Key = $key;
                 if (isset($settings['folder']))
                 {
-                    $key = $settings['folder'] . "/" . $key;
+                    $s3Key = $settings['folder'] . "/" . $s3Key;
                 }
-                $response = $s3->getObject([
-                    "Bucket" => getenv("S3_BUCKET"),
-                    "Key" => $key,
+                $file = $s3->getObject([
+                    "Bucket" => $settings["bucket"],
+                    "Key" => $s3Key,
                 ]);
+                $response["Body"] = $file["Body"];
+                $response["Name"] = $key;
+                $response["ContentType"] = $file["ContentType"];
             }
         }
         else
@@ -282,7 +319,7 @@ class Transform extends Component
                 $response["ContentType"] = \mime_content_type($path);
             }
         }
-        return $response;
+        return (array)$response;
     }
 
     private function cacheImage($settings, $key, $image): void
