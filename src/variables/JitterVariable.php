@@ -11,9 +11,11 @@
 namespace codewithkyle\jitter\variables;
 
 use codewithkyle\jitter\Jitter;
+use codewithkyle\jitter\exceptions\JitterException;
 
 use Craft;
 use craft\elements\Asset;
+
 
 /**
  * Jitter Variable
@@ -34,19 +36,21 @@ class JitterVariable
 
     public function transformImage(Asset $file, $params): string
     {
-        $request = Craft::$app->getRequest();
-        $clientAcceptsWebp = $request->accepts('image/webp');
-        $params = json_decode(json_encode($params), true);
-        $params['id'] = $file->id;
-        $response = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
-        if ($response['success'])
+        $url = "";
+        try
         {
-            return $response['url'];
+            $request = Craft::$app->getRequest();
+            $clientAcceptsWebp = $request->accepts('image/webp');
+            $params = json_decode(json_encode($params), true);
+            $params['id'] = $file->id;
+            $file = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
+            $url = Jitter::getInstance()->transform->generateURL($params);
         }
-        else
+        catch (JitterException $e)
         {
-            Craft::error($response['error'], __METHOD__);
+            Craft::error($e->getMessage(), __METHOD__);
         }
+        return $url;
     }
 
     public function srcset(Asset $file, array $params): string
