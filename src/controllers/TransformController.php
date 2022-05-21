@@ -26,16 +26,14 @@ class TransformController extends Controller
     // =========================================================================
 
     /**
-     * @var    bool|array Allows anonymous access to this controller's actions.
-     *         The actions must be in 'kebab-case'
      * @access protected
      */
-    protected $allowAnonymous = ['image'];
+    protected bool $allowAnonymous = true;
 
     // Public Methods
     // =========================================================================
 
-    public function actionImage()
+    public function actionImage(): Response
     {
         $request = Craft::$app->getRequest();
         $params = $request->getQueryParams();

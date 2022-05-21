@@ -27,9 +27,4 @@ class JitterException extends \Exception
     {
         return $this->statusCode;
     }
-
-    public function getMessage()
-    {
-        return $this->errorMessage;
-    }
 }

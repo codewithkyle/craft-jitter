@@ -2,7 +2,7 @@
     "name": "codewithkyle/jitter",
     "description": "A just in time image transformation service.",
     "type": "craft-plugin",
-    "version": "1.2.1",
+    "version": "2.0.0",
     "keywords": [
         "craft",
         "cms",
@@ -22,9 +22,10 @@
         }
     ],
     "require": {
-        "craftcms/cms": "^3.0.0",
+        "php": "^8.0",
+        "craftcms/cms": "^4.0.0",
         "aws/aws-sdk-php": "^3.0.0",
-        "codewithkyle/jitter-core": "^1.0"
+        "codewithkyle/jitter-core": "^1.0.2"
     },
     "autoload": {
         "psr-4": {
@@ -42,5 +43,13 @@
             "transform": "codewithkyle\\jitter\\services\\Transform"
         },
         "class": "codewithkyle\\jitter\\Jitter"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true,
+            "craftcms/plugin-installer": true
+        }
     }
 }
