@@ -25,7 +25,7 @@ class TransformController extends Controller
     // Protected Properties
     // =========================================================================
 
-    protected $allowAnonymous = ["image"];
+    protected $allowAnonymous = true;
 
     // Public Methods
     // =========================================================================

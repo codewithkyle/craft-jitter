@@ -2,7 +2,7 @@
     "name": "codewithkyle/jitter",
     "description": "A just in time image transformation service.",
     "type": "craft-plugin",
-    "version": "1.2.5",
+    "version": "1.2.6",
     "keywords": [
         "craft",
         "cms",
@@ -23,7 +23,7 @@
     ],
     "require": {
         "php": "^7.2|^8.0",
-        "craftcms/cms": "^3.2|^4.0",
+        "craftcms/cms": "^3.2",
         "aws/aws-sdk-php": "^3.0.0",
         "codewithkyle/jitter-core": "^1.0.2"
     },
