@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+## [1.2.4] - 2022-05-30
+
+### Fixed
+
+- Craft version requirements
+
 ## [1.2.3] - 2022-05-30
 
 ### Fixed
@@ -69,7 +75,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - delete local files
     - delete S3 files
 
-[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.3...HEAD
+[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.4...HEAD
+[1.2.4]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.0...v1.2.1
