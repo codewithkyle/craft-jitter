@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+## [2.0.0] - 2022-05-30
+
+### Added
+
+- Craft 4 support
+
+### Fixed
+
+- Craft 4 & PHP 8 type issues
+
 ## [1.2.6] - 2022-05-30
 
 ### Fixed
@@ -91,7 +101,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - delete local files
     - delete S3 files
 
-[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.6...HEAD
+[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.6...v2.0.0
 [1.2.6]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.5...v1.2.6
 [1.2.5]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.3...v1.2.4
