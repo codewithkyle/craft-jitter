@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
-# [1.2.2] - 2022-05-21
+## [1.2.3] - 2022-05-30
+
+### Fixed
+
+- PHP 8 bugs introduced by Craft's Rector library
+
+## [1.2.2] - 2022-05-21
 
 ### Added
 
@@ -63,7 +69,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - delete local files
     - delete S3 files
 
-[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.3...HEAD
+[1.2.3]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.2...v1.2.3
+[1.2.2]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/codewithkyle/craft-jitter/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/codewithkyle/craft-jitter/compare/v1.1.1...v1.1.2
