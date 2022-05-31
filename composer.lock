@@ -213,7 +213,7 @@
         },
         {
             "name": "codewithkyle/jitter-core",
-            "version": "1.0.2",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/codewithkyle/jitter.git",

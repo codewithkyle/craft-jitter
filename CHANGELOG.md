@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+## [2.1.0] - 2022-05-31
+
+### Added
+
+- `croponly` mode (previously was `crop` mode)
+
+### Fixed
+
+- `clip` mode no longer crops or distorts the image
+- `crop` mode inconsistencies -- now resizes before cropping (for old functionality see `croponly` mode)
+- focal point out of bounds bug
+
 ## [2.0.0] - 2022-05-30
 
 ### Added
@@ -101,7 +113,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - delete local files
     - delete S3 files
 
-[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.6...v2.0.0
 [1.2.6]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.5...v1.2.6
 [1.2.5]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.4...v1.2.5
