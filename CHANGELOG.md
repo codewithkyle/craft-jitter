@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+### Added
+
+- support for S3-compatible object storage solutions (like [Digital Ocean Spaces](https://www.digitalocean.com/products/spaces)) ([#16](https://github.com/codewithkyle/craft-jitter/issues/16))
+
+### Updated
+
+- composer packages
+    - Jitter Core v1.1.0 -> v2.0.0
+
 ## [2.1.0] - 2022-05-31
 
 ### Added

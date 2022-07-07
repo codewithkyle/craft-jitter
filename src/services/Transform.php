@@ -251,14 +251,19 @@ class Transform extends Component
 
     private function connectToS3(array $settings)
     {
-        return S3Client::factory([
+        $conn = [
             'credentials' => [
                 'key'    => $settings['accessKey'],
                 'secret' => $settings['secretAccessKey'],
             ],
             'region' => $settings['region'],
             'version' => 'latest'
-        ]);
+        ];
+        if (isset($settings["endpoint"]))
+        {
+            $conn["endpoint"] = $settings["endpoint"];
+        }
+        return S3Client::factory($conn);
     }
 
     private function getSettings()
