@@ -25,19 +25,22 @@ To install the plugin, follow these instructions.
 
 ## Configuring Jitter
 
-Jitter can be configured by adding a `jitter.php` file to your projects `config/` directory.
+Jitter can be configured to use S3-compatible object storage solutions by adding a `jitter.php` file to your projects `config/` directory.
 
 ```php
 <?php
 
 return [
-    'accessKey' => getenv("S3_PUBLIC_KEY"),
-    'secretAccessKey' => getenv("S3_PRIVATE_KEY"),
-    'region' => 'us-east-2',
-    'bucket' => 'bucket-name',
-    'folder' => 'transformed-images',
+    "accessKey" => getenv("PUBLIC_KEY"),
+    "secretAccessKey" => getenv("PRIVATE_KEY"),
+    "region" => "region-name",
+    "bucket" => "bucket-name",
+    "folder" => "transformed-images",
+    "endpoint" => getenv("ENDPOINT_URL")
 ];
 ```
+
+> **Note**: the `endpoint` config value is optional. You will only need to use it when using an S3-compatible alternative S3 cloud object storage solution (like Digital Ocean Spaces).
 
 ## Using Jitter
 
@@ -50,11 +53,12 @@ Requesting an image transformation through the API:
 Requesting an image transformation via Twig:
 
 ```twig
-{# This will transform the image on page load #}
+{# This will transform the image when the template renders. #}
+{# This can cause site-wide performance issues depending on how many times this method is used (per template) and how much RAM is available. #}
 {% set transformedImageUrl = craft.jitter.transformImage(entry.image[0], { w: 150, ar: "1:1", m: "fit", fm: "gif", q: 10 }) %}
 
 {# For a faster template render build the API URL instead #}
-{% set transformedImageUrl = "/jitter/v1/transform&id=" ~ entry.image[0].id ~ "&w=150&ar=1:1&m=fit&fm=gif&q=10" %}
+{% set transformedImageUrl = craft.jitter.url(entry.image[0], { w: 150, ar: "1:1", m: "fit", fm: "gif", q: 10 }) %}
 
 <img 
     src="{{ transformedImageUrl }}" 
@@ -72,8 +76,12 @@ Generating transformations via PHP:
 
 ```php
 $jitter = new \codewithkyle\jitter\services\Transform();
-$src = "/jitter/v1/transform?id=" . $image->id . "&w=300&ar=1:1";
-$srcset = $jitter->generateSourceSet($image->id, [
+$src = $jitter->generateURL([
+    "id" => $image->id,
+    "w" => 300,
+    "ar" => "1:1",
+]);
+$srcset = $jitter->generateSourceSet($image, [
     [
         "w" => 300,
         "h" => 250,
@@ -94,7 +102,7 @@ Transformation parameters:
 | Parameter     | Default                    | Description                     | Valid options                                  |
 | ------------- | -------------------------- | ------------------------------- | ---------------------------------------------- |
 | `id`          | `null`                     | the image asset id              | `int`                                          |
-| `path`        | `null`                     | the image asset id              | `int`                                          |
+| `path`        | `null`                     | the image file path             | `string`                                       |
 | `w`           | base image width           | desired image width             | `int`                                          |
 | `h`           | base image height          | desired image height            | `int`                                          |
 | `ar`          | base image aspect ratio    | desired aspect ratio            | `int`:`int`                                    |

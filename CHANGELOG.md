@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+## [2.2.0] - 2022-07-07
+
+### Added
+
+- support for S3-compatible object storage solutions (like [Digital Ocean Spaces](https://www.digitalocean.com/products/spaces)) ([#16](https://github.com/codewithkyle/craft-jitter/issues/16))
+- `craft.jitter.url(asset, params)` method
+
+### Fixed
+
+- improved image caching response times ([#15](https://github.com/codewithkyle/craft-jitter/issues/15))
+- `craft.jitter.transformImage()` would cache transformed images using the assets `uid` instead of `id` ([#14](https://github.com/codewithkyle/craft-jitter/issues/14))
+
+### Updated
+
+- composer packages
+    - Jitter Core v1.1.0 -> v2.0.0
+
 ## [2.1.0] - 2022-05-31
 
 ### Added
@@ -113,7 +130,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - delete local files
     - delete S3 files
 
-[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.6...v2.0.0
 [1.2.6]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.5...v1.2.6

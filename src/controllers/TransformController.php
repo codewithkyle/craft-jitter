@@ -1,11 +1,11 @@
 <?php
 /**
- * Jitter plugin for Craft CMS 3.x
+ * Jitter plugin for Craft CMS 4.x
  *
  * A just in time image transformation service.
  *
  * @link      https://kyleandrews.dev/
- * @copyright Copyright (c) 2020 Kyle Andrews
+ * @copyright Copyright (c) 2022 Kyle Andrews
  */
 
 namespace codewithkyle\jitter\controllers;
@@ -34,10 +34,9 @@ class TransformController extends Controller
     {
         $request = Craft::$app->getRequest();
         $params = $request->getQueryParams();
-        $clientAcceptsWebp = $request->accepts('image/webp');
         try
         {
-            $file = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
+            $file = Jitter::getInstance()->transform->transformImage($params);
             $response = Craft::$app->getResponse();
             $response->format = Response::FORMAT_RAW;
             if (isset($file["ContentType"]))
