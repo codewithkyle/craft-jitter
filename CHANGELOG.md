@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Added
 
 - support for S3-compatible object storage solutions (like [Digital Ocean Spaces](https://www.digitalocean.com/products/spaces)) ([#16](https://github.com/codewithkyle/craft-jitter/issues/16))
+- `craft.jitter.url(asset, params)` method
+
+### Fixed
+
+- improved image caching response speeds ([#15](https://github.com/codewithkyle/craft-jitter/issues/15))
 
 ### Updated
 

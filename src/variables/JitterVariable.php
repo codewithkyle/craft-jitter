@@ -1,11 +1,11 @@
 <?php
 /**
- * Jitter plugin for Craft CMS 3.x
+ * Jitter plugin for Craft CMS 4.x
  *
  * A just in time image transformation service.
  *
  * @link      https://kyleandrews.dev/
- * @copyright Copyright (c) 2020 Kyle Andrews
+ * @copyright Copyright (c) 2022 Kyle Andrews
  */
 
 namespace codewithkyle\jitter\variables;
@@ -20,11 +20,6 @@ use craft\elements\Asset;
 /**
  * Jitter Variable
  *
- * Craft allows plugins to provide their own template variables, accessible from
- * the {{ craft }} global variable (e.g. {{ craft.jITIT }}).
- *
- * https://craftcms.com/docs/plugins/variables
- *
  * @author    Kyle Andrews
  * @package   Jitter
  * @since     1.0.0
@@ -34,16 +29,14 @@ class JitterVariable
     // Public Methods
     // =========================================================================
 
-    public function transformImage(Asset $file, $params): string
+    public function transformImage(Asset $file, array $params): string
     {
         $url = "";
         try
         {
-            $request = Craft::$app->getRequest();
-            $clientAcceptsWebp = $request->accepts('image/webp');
-            $params = json_decode(json_encode($params), true);
+            $params = json_decode(json_encode($params), true); // Convert objects to arrays
             $params['id'] = $file->id;
-            $file = Jitter::getInstance()->transform->transformImage($params, $clientAcceptsWebp);
+            $file = Jitter::getInstance()->transform->transformImage($params);
             $url = Jitter::getInstance()->transform->generateURL($params);
         }
         catch (JitterException $e)
@@ -53,9 +46,16 @@ class JitterVariable
         return $url;
     }
 
+    public function url(Asset $file, array $params): string
+    {
+        $params = json_decode(json_encode($params), true); // Convert objects to arrays
+        $params["id"] = $file->id;
+        return Jitter::getInstance()->transform->generateURL($params);
+    }
+
     public function srcset(Asset $file, array $params): string
     {
-        $images = json_decode(json_encode($params), true);
-        return Jitter::getInstance()->transform->generateSourceSet($file->id, $images);
+        $params = json_decode(json_encode($params), true); // Convert objects to arrays
+        return Jitter::getInstance()->transform->generateSourceSet($file->id, $params);
     }
 }

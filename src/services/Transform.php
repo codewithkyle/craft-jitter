@@ -1,11 +1,11 @@
 <?php
 /**
- * Jitter plugin for Craft CMS 3.x
+ * Jitter plugin for Craft CMS 4.x
  *
  * A just in time image transformation service.
  *
  * @link      https://kyleandrews.dev/
- * @copyright Copyright (c) 2020 Kyle Andrews
+ * @copyright Copyright (c) 2022 Kyle Andrews
  */
 
 namespace codewithkyle\jitter\services;
@@ -28,7 +28,7 @@ class Transform extends Component
     // Public Methods
     // =========================================================================
 
-    public function clearS3BucketCache()
+    public function clearS3BucketCache(): void
     {
         $settings = $this->getSettings();
         if (!empty($settings))
@@ -61,33 +61,11 @@ class Transform extends Component
     public function generateURL(array $params): string
     {
         $ret = "/jitter/v1/transform?";
-        $asset = Asset::find()->id($params["id"])->one();
-        if (empty($asset))
+        foreach ($params as $key => $value)
         {
-            Craft::error("Failed to find asset with an id of " . $id, __METHOD__);
+            $ret .= $key . "=" . $value . "&";
         }
-        else
-        {
-            $masterImage = $asset->getCopyOfFile();
-        }
-        if ($masterImage)
-        {
-            $isFrist = true;
-            foreach ($params as $key => $value)
-            {
-                if ($isFrist)
-                {
-                    $ret .= $key . "=" . $value;
-                }
-                else
-                {
-                    $ret .= "&" . $key . "=" . $value;
-                }
-                $isFrist = false;
-            }
-            \unlink($masterImage);
-        }
-        return $ret;
+        return rtrim($ret, "&");
     }
 
     public function generateSourceSet(string $id, array $images): string
@@ -153,7 +131,7 @@ class Transform extends Component
         return $ret;
     }
 
-    public function transformImage(array $params, bool $clientAcceptsWebp)
+    public function transformImage(array $params)
     {
         $masterImage = null;
         $asset = null;
