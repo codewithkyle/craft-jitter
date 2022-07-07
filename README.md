@@ -25,7 +25,7 @@ To install the plugin, follow these instructions.
 
 ## Configuring Jitter
 
-Jitter can be configured by adding a `jitter.php` file to your projects `config/` directory.
+Jitter can be configured to use S3-compatible object storage solutions by adding a `jitter.php` file to your projects `config/` directory.
 
 ```php
 <?php
@@ -40,7 +40,7 @@ return [
 ];
 ```
 
-> **Note**: the `endpoint` config value is optional. You will only need to use it when using an S3-compatible alternative cloud object storage solution.
+> **Note**: the `endpoint` config value is optional. You will only need to use it when using an S3-compatible alternative S3 cloud object storage solution (like Digital Ocean Spaces).
 
 ## Using Jitter
 
@@ -76,7 +76,11 @@ Generating transformations via PHP:
 
 ```php
 $jitter = new \codewithkyle\jitter\services\Transform();
-$src = "/jitter/v1/transform?id=" . $image->id . "&w=300&ar=1:1";
+$src = $jitter->generateURL([
+    "id" => $image->id,
+    "w" => 300,
+    "ar" => "1:1",
+]);
 $srcset = $jitter->generateSourceSet($image, [
     [
         "w" => 300,
