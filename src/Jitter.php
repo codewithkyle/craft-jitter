@@ -1,11 +1,11 @@
 <?php
 /**
- * Jitter plugin for Craft CMS 3.x
+ * Jitter plugin for Craft CMS 4.x
  *
  * A just in time image transformation service.
  *
  * @link      https://kyleandrews.dev/
- * @copyright Copyright (c) 2020 Kyle Andrews
+ * @copyright Copyright (c) 2022 Kyle Andrews
  */
 
 namespace codewithkyle\jitter;

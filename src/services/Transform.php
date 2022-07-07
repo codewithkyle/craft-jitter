@@ -131,13 +131,29 @@ class Transform extends Component
         return $ret;
     }
 
-    public function transformImage(array $params)
+    public function transformImage(array $params, Asset $asset = null): array
     {
+        $transform = JitterCore::BuildTransform($params);
+        $key = $this->createKey($params, $asset);
+
+        // Caching logic
+        $cachedResponse = $this->checkCache($settings, $key);
+        if (!empty($cachedResponse))
+        {
+            return $cachedResponse;
+        }
+
+        // Transform logic
         $masterImage = null;
-        $asset = null;
         $settings = $this->getSettings();
-        $needsCleanup = false;
-        if (isset($params['id']))
+        $needsCleanup = false; 
+
+        if (!is_null($asset))
+        {
+            $masterImage = $asset->getCopyOfFile();
+            $needsCleanup = true;
+        }
+        else if (isset($params["id"]))
         {
             $asset = Asset::find()->id($params['id'])->one();
             if (empty($asset))
@@ -148,35 +164,19 @@ class Transform extends Component
             {
                 $masterImage = $asset->getCopyOfFile();
                 $needsCleanup = true;
-            }
+            }   
         }
         else if (isset($params['path']))
         {
             $masterImage = FileHelper::normalizePath(Yii::getAlias("@webroot") . "/" . ltrim($params['path'], "/"));
             if (!\file_exists($masterImage))
             {
-                $this->fail(404, "Invalid image location: " . $masterImage);
+                $this->fail(404, "Invalid image path.");
             }
         }
         else
         {
-            $this->fail(400, "'id' or 'path' required");
-        }
-
-        preg_match("/(\..{1,4})$/", $masterImage, $matches);
-        $fallbackFormat = strtolower(ltrim($matches[0], "."));
-
-        $img = new Imagick($masterImage);
-        $width = $img->getImageWidth();
-        $height = $img->getImageHeight();
-
-        $transform = JitterCore::BuildTransform($params, $width, $height, $fallbackFormat);
-        $key = $this->buildTransformUid($transform, $asset->uid ?? $masterImage);
-
-        $cachedResponse = $this->checkCache($settings, $key);
-        if (!empty($cachedResponse))
-        {
-            return $cachedResponse;
+            $this->fail(400, "'id' or 'path' required.");
         }
 
         $uid = StringHelper::UUID();
@@ -207,10 +207,9 @@ class Transform extends Component
         return $file;
     }
 
-    private function buildTransformUid(array $transform, string $uniqueValue): string
+    private function buildTransformUid(string $uniqueValue, array $transform): string
     {
-        $key = $uniqueValue . json_encode($transform);
-        return \md5($key);
+        return \md5($uniqueValue) . "-" . \md5(json_encode($transform));
     }
 
     private function fail(int $statusCode, string $error): void
@@ -227,7 +226,7 @@ class Transform extends Component
 		return $path;
 	}
 
-    private function connectToS3(array $settings)
+    private function connectToS3(array $settings): S3Client
     {
         $conn = [
             'credentials' => [
@@ -244,7 +243,7 @@ class Transform extends Component
         return S3Client::factory($conn);
     }
 
-    private function getSettings()
+    private function getSettings(): ?array
     {
         $settings = null;
         $settingsPath = FileHelper::normalizePath(Craft::$app->path->configPath . '/jitter.php');
@@ -325,5 +324,23 @@ class Transform extends Component
         {
             copy($image, FileHelper::normalizePath($this->getPublicPath() . "/" . $key));
         }
+    }
+
+    private function createKey(array $params, Asset $asset): string
+    {
+        $assetIndent = null;
+        if (!is_null($asset))
+        {
+            $assetIndent = $asset->id;
+        }
+        else if (isset($params["id"]))
+        {
+            $assetIndent = $params["id"];
+        }
+        else if (isset($params["path"]))
+        {
+            $assetIndent = $params["path"];
+        }
+        return $this->buildTransformUid($assetIndent, $params);
     }
 }

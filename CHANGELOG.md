@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Fixed
 
 - improved image caching response speeds ([#15](https://github.com/codewithkyle/craft-jitter/issues/15))
+- `craft.jitter.transformImage()` would cache transformed images using the assets `uid` instead of `id`
 
 ### Updated
 

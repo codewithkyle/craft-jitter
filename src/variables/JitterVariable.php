@@ -36,7 +36,7 @@ class JitterVariable
         {
             $params = json_decode(json_encode($params), true); // Convert objects to arrays
             $params['id'] = $file->id;
-            $file = Jitter::getInstance()->transform->transformImage($params);
+            $file = Jitter::getInstance()->transform->transformImage($params, $file);
             $url = Jitter::getInstance()->transform->generateURL($params);
         }
         catch (JitterException $e)
