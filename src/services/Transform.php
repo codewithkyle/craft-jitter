@@ -332,7 +332,7 @@ class Transform extends Component
         }
     }
 
-    private function createKey(array $params, Asset $asset): string
+    private function createKey(array $params, ?Asset $asset): string
     {
         $assetIndent = null;
         if (!is_null($asset))
