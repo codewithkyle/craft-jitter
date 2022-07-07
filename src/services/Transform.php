@@ -170,7 +170,7 @@ class Transform extends Component
             {
                 $masterImage = $asset->getCopyOfFile();
                 $needsCleanup = true;
-            }   
+            }
         }
         else if (isset($params['path']))
         {
