@@ -34,7 +34,7 @@ class JitterVariable
         $url = "";
         try
         {
-            $params = json_decode(json_encode($params), true); // Convert objects to arrays
+            $params = json_decode(json_encode($params), true); // Convert objects to array
             $params['id'] = $file->id;
             $file = Jitter::getInstance()->transform->transformImage($params, $file);
             $url = Jitter::getInstance()->transform->generateURL($params);
@@ -48,14 +48,14 @@ class JitterVariable
 
     public function url(Asset $file, array $params): string
     {
-        $params = json_decode(json_encode($params), true); // Convert objects to arrays
+        $params = json_decode(json_encode($params), true); // Convert objects to array
         $params["id"] = $file->id;
         return Jitter::getInstance()->transform->generateURL($params);
     }
 
     public function srcset(Asset $file, array $params): string
     {
-        $params = json_decode(json_encode($params), true); // Convert objects to arrays
-        return Jitter::getInstance()->transform->generateSourceSet($file->id, $params);
+        $params = json_decode(json_encode($params), true); // Converts array of objects to array of arrays
+        return Jitter::getInstance()->transform->generateSourceSet($file, $params);
     }
 }

@@ -68,22 +68,29 @@ class Transform extends Component
         return rtrim($ret, "&");
     }
 
-    public function generateSourceSet(string $id, array $images): string
+    public function generateSourceSet(string|int|Asset $assetOrId, array $images): string
     {        
-        $masterImage = null;
         $ret = "";
-        $baseUrl = "/jitter/v1/transform?id=" . $id;
+        $id = $assetOrId;
+        $asset = null;
 
-        $asset = Asset::find()->id($id)->one();
-        if (empty($asset))
+        if ($assetOrId instanceof Asset)
         {
-            Craft::error("Failed to find asset with an id of " . $id, __METHOD__);
+            $asset = $assetOrId;
+            $id = $assetOrId->id;
         }
         else
         {
-            $masterImage = $asset->getCopyOfFile();
+            $asset = Asset::find()->id($id)->one();
+            if (empty($asset))
+            {
+                Craft::error("Failed to find asset with an id of " . $id, __METHOD__);
+            }
         }
-        if ($masterImage)
+
+        $baseUrl = "/jitter/v1/transform?id=" . $id;
+
+        if (!empty($asset))
         {
             $count = 0;
             $maxCount = count($images);
@@ -104,15 +111,15 @@ class Transform extends Component
                     if (isset($image['h']))
                     {
                         $aspectRatioValues = [$asset->width, $asset->height];
-                        if (isset($params['ar']))
+                        if (isset($image['ar']))
                         {
-                            $values = explode(':', $params['ar']);
+                            $values = explode(':', $image['ar']);
                             if (count($values) == 2)
                             {
                                 $aspectRatioValues = [intval($values[0]), intval($values[1])];
                             }
                         }
-                        $height = intval($params['h']);
+                        $height = intval($image['h']);
                         $width = ($aspectRatioValues[0] / $aspectRatioValues[1]) * $height;
                         $ret .= " " . $width . "w";
                     }
@@ -126,7 +133,6 @@ class Transform extends Component
                     $ret .= ", ";
                 }
             }
-            \unlink($masterImage);
         }
         return $ret;
     }
@@ -135,6 +141,7 @@ class Transform extends Component
     {
         $transform = JitterCore::BuildTransform($params);
         $key = $this->createKey($params, $asset);
+        $settings = $this->getSettings();
 
         // Caching logic
         $cachedResponse = $this->checkCache($settings, $key);
@@ -145,7 +152,6 @@ class Transform extends Component
 
         // Transform logic
         $masterImage = null;
-        $settings = $this->getSettings();
         $needsCleanup = false; 
 
         if (!is_null($asset))
