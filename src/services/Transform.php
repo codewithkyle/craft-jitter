@@ -253,11 +253,12 @@ class Transform extends Component
         }
         JitterCore::TransformImage($tempImage, $transform, $resizeOn);
 
-        $this->cacheImage($settings, $key, $tempImage);
+        $mime = \mime_content_type($tempImage),
+        $this->cacheImage($settings, $key, $tempImage, $mime);
 
         $file = [
             "Body" => \file_get_contents($tempImage),
-            "ContentType" => \mime_content_type($tempImage),
+            "ContentType" => $mime,
             "Name" => $key,
         ];
 
@@ -363,7 +364,7 @@ class Transform extends Component
         return (array)$response;
     }
 
-    private function cacheImage($settings, $key, $image): void
+    private function cacheImage($settings, $key, $image, $mime): void
     {
         if (!empty($settings))
         {
@@ -376,6 +377,7 @@ class Transform extends Component
                 'Bucket' => $settings['bucket'],
                 'Key' => $s3Key,
                 'SourceFile' => $image,
+                'ContentType' => $mime,
             ]);
             touch(FileHelper::normalizePath($this->getTempPath() . "/" . $key));
         }
