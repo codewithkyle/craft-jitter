@@ -25,7 +25,7 @@ To install the plugin, follow these instructions.
 
 ## Configuring Jitter
 
-Jitter can be configured to use S3-compatible object storage solutions by adding a `jitter.php` file to your projects `config/` directory.
+Jitter can be configured to use S3-compatible object storage solutions by adding a `jitter.php` file to your projects `config/` directory. Transformed images will be stored in the storage solution but will still be served from your web server. If you would like to server images from a CDN read the section below.
 
 ```php
 <?php
@@ -62,7 +62,7 @@ return [
 ];
 ```
 
-> **Note**: if you use Craft's template caching or a 3rd party HTML caching service (like Cloudflare's Edge Cache) `/jitter/` image URLs may be cached when a CDN URL is available. We do not recommend disabling your caching systems, however, you may want to consider settings a lower TTL to ensure the CDN URLs propagate sooner rather than later.
+> **Note**: if you use Craft's template caching or a 3rd party HTML caching service (like Cloudflare's Edge Cache) `/jitter/` image URLs may be cached when a CDN URL is available. We do not recommend disabling your caching systems, however, you may want to consider using a lower TTL to ensure the CDN URLs propagate sooner rather than later.
 
 ## Using Jitter
 
