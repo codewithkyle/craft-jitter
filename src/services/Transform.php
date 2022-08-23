@@ -113,6 +113,26 @@ class Transform extends Component
 
     public function generateURL(array $params): string
     {
+        // Return early if we are using a CDN && the transform has already been created
+        $settings = $this->getSettings();
+        if (isset($settings["cdn"]))
+        {
+            $transform = JitterCore::BuildTransform($params);
+            $key = $this->createKey($transform, $params["id"]);
+            $path = FileHelper::normalizePath($this->getTempPath() . "/" . $key);
+            if (\file_exists($path))
+            {
+                $ret = rtrim($settings["cdn"], "/") . "/";
+                if (isset($settings["folder"]))
+                {
+                    $ret .= trim($settings["folder"], "/") . "/";
+                }
+                $ret .= $key;
+                return $ret;
+            }
+        }
+
+        // If not using CDN or the transform doesn't exist (yet) use local URL
         $ret = "/jitter/v1/transform?";
         foreach ($params as $key => $value)
         {
@@ -142,6 +162,12 @@ class Transform extends Component
         }
 
         $baseUrl = "/jitter/v1/transform?id=" . $id;
+        $cdnUrl = null;
+        $settings = $this->getSettings();
+        if (isset($settings["cdn"]))
+        {
+            $cdnUrl = rtrim($settings["cdn"], "/") . "/";
+        }
 
         if (!empty($asset))
         {
@@ -150,11 +176,33 @@ class Transform extends Component
             foreach ($images as $image)
             {
                 $count++;
-                $ret .= $baseUrl;
-                foreach ($image as $key => $value)
+                $usedCDN = false;
+
+                if (!is_null($cdnUrl))
                 {
-                    $ret .= "&" . $key . "=" . $value;
+                    $transform = JitterCore::BuildTransform($image);
+                    $key = $this->createKey($transform, $id);
+                    $path = FileHelper::normalizePath($this->getTempPath() . "/" . $key);
+                    if (\file_exists($path))
+                    {
+                        $ret .= $cdnUrl;
+                        if (isset($settings["folder"]))
+                        {
+                            $ret .= trim($settings["folder"], "/") . "/";
+                        }
+                        $ret .= $key;
+                        $usedCDN = true;
+                    }
                 }
+                if (!$usedCDN)
+                {
+                    $ret .= $baseUrl;
+                    foreach ($image as $key => $value)
+                    {
+                        $ret .= "&" . $key . "=" . $value;
+                    }
+                }
+
                 if (isset($image['w']))
                 {
                     $ret .= " " . $image['w'] . "w";
@@ -209,10 +257,9 @@ class Transform extends Component
         $settings = $this->getSettings();
 
         // Caching logic
-        $cachedResponse = $this->checkCache($settings, $key);
-        if (!empty($cachedResponse))
+        if ($this->checkCache($settings, $key))
         {
-            return $cachedResponse;
+            return $this->getCachedImage($settings, $key);
         }
 
         // Transform logic
@@ -340,7 +387,7 @@ class Transform extends Component
         return $path;
     }
 
-    private function checkCache($settings, string $key): array
+    private function getCachedImage(array $settings, string $key): array
     {
         $response = [];
         if (!empty($settings))
@@ -376,6 +423,28 @@ class Transform extends Component
         return (array)$response;
     }
 
+    private function checkCache(array $settings, string $key): bool
+    {
+        $isCached = false;
+        if (!empty($settings))
+        {
+            $path = FileHelper::normalizePath($this->getTempPath() . "/" . $key);
+            if (\file_exists($path))
+            {
+                $isCached = true;
+            }
+        }
+        else
+        {
+            $path = FileHelper::normalizePath($this->getPublicPath() . "/" . $key);
+            if (\file_exists($path))
+            {
+                $isCached = true;
+            }
+        }
+        return $isCached;
+    }
+
     private function cacheImage($settings, $key, $image, $mime): void
     {
         if (!empty($settings))
@@ -386,10 +455,11 @@ class Transform extends Component
                 $s3Key = $settings['folder'] . "/" . $key;
             }
             $s3->putObject([
-                'Bucket' => $settings['bucket'],
-                'Key' => $s3Key,
-                'SourceFile' => $image,
-                'ContentType' => $mime,
+                "Bucket" => $settings['bucket'],
+                "Key" => $s3Key,
+                "SourceFile" => $image,
+                "ContentType" => $mime,
+                "ACL" => $settings["acl"] ?? "private",
             ]);
             touch(FileHelper::normalizePath($this->getTempPath() . "/" . $key));
         }
