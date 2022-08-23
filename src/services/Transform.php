@@ -190,10 +190,22 @@ class Transform extends Component
         return $ret;
     }
 
-    public function transformImage(array $params, Asset $asset = null): array
+    public function transformImage(array $params, ?Asset $asset = null): array
     {
         $transform = JitterCore::BuildTransform($params);
-        $key = $this->createKey($params, $asset);
+        $assetOrId = $asset;
+        if (is_null($assetOrId))
+        {
+            if (issset($params["id"]))
+            {
+                $assetOrId = $params["id"];
+            }
+            else
+            {
+                $assetOrId = $params["path"];
+            }
+        }
+        $key = $this->createKey($transform, $assetOrId);
         $settings = $this->getSettings();
 
         // Caching logic
@@ -387,21 +399,17 @@ class Transform extends Component
         }
     }
 
-    private function createKey(array $params, ?Asset $asset): string
+    private function createKey(array $transform, Asset|string $assetOrId): string
     {
-        $assetIndent = null;
-        if (!is_null($asset))
+        $id = null;
+        if ($assetOrId instanceof Asset)
         {
-            $assetIndent = $asset->id;
+            $id = $asset->id;
         }
-        else if (isset($params["id"]))
+        else
         {
-            $assetIndent = $params["id"];
+            $id = $assetOrId;
         }
-        else if (isset($params["path"]))
-        {
-            $assetIndent = $params["path"];
-        }
-        return $this->buildTransformUid($assetIndent, $params);
+        return $this->buildTransformUid($id, $transform);
     }
 }
