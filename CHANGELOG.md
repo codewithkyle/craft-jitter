@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+## [2.3.0] - 2022-08-23
+
+### Added
+
+- CDN support ([#22](https://github.com/codewithkyle/craft-jitter/issues/22))
+- automatically delete transformed images when the source image is deleted from Craft ([#19](https://github.com/codewithkyle/craft-jitter/issues/19))
+- new config settings:
+    - `cdn`
+        - must be the CDN's origin URL
+    - `acl`
+        - controls the files default ACL value
+        - supports "private" (default) and "public-read"
+
+### Fixed
+
+- images stored in S3 or Spaces now use the correct `Content-Type` header ([#21](https://github.com/codewithkyle/craft-jitter/issues/21))
+    - previously always used `application/octet-stream` (default value for S3-compatible storage solutions)
+    - now uses correct MIME type
+
 ## [2.2.0] - 2022-07-07
 
 ### Added
@@ -130,7 +149,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - delete local files
     - delete S3 files
 
-[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/codewithkyle/craft-jitter/compare/v1.2.6...v2.0.0
