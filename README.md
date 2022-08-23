@@ -6,8 +6,8 @@ Jitter is a just in time image transformation plugin for Craft CMS. The API is b
 
 This plugin requires [ImageMagick](https://imagemagick.org/index.php) and the following versions of PHP and Craft CMS:
 
-- Craft CMS 4.0.0+ with PHP 8+
-- Craft CMS 3.0.0+ with PHP 7.2+ or 8+
+- Craft CMS 4.0.0+ with PHP 8+ (Jitter v2.0+, active)
+- Craft CMS 3.0.0+ with PHP 7.2+ (Jitter v1.x, unsupported)
 
 ## Installation
 
@@ -36,11 +36,33 @@ return [
     "region" => "region-name",
     "bucket" => "bucket-name",
     "folder" => "transformed-images",
-    "endpoint" => getenv("ENDPOINT_URL")
+    "endpoint" => getenv("ENDPOINT_URL"),
+    "acl" => "private", // supports "private" or "public-read"
 ];
 ```
 
-> **Note**: the `endpoint` config value is optional. You will only need to use it when using an S3-compatible alternative S3 cloud object storage solution (like Digital Ocean Spaces).
+> **Note**: the `endpoint` and `acl` config values are optional. You will only need to use `endpoint` when using an S3-compatible alternative S3 cloud object storage solution (like Digital Ocean Spaces).
+
+## CDN
+
+Jitter can be configured to use CDN URLs. The `cdn` config value should be the CDN's origin URL. Jitter's `url()` and `srcset()` functions will automatically switch from using the `/jitter/` URL to the CDN URL over time as the image transformations are performed.
+
+```php
+<?php
+
+return [
+    "accessKey" => getenv("PUBLIC_KEY"),
+    "secretAccessKey" => getenv("PRIVATE_KEY"),
+    "region" => "region-name",
+    "bucket" => "bucket-name",
+    "folder" => "transformed-images",
+    "endpoint" => getenv("ENDPOINT_URL"),
+    "acl" => "public-read",
+    "cdn" => "https://demo.cdn.example.com/"
+];
+```
+
+> **Note**: if you use Craft's template caching or a 3rd party HTML caching service (like Cloudflare's Edge Cache) `/jitter/` image URLs may be cached when a CDN URL is available. We do not recommend disabling your caching systems, however, you may want to consider settings a lower TTL to ensure the CDN URLs propagate sooner rather than later.
 
 ## Using Jitter
 
@@ -58,6 +80,7 @@ Requesting an image transformation via Twig:
 {% set transformedImageUrl = craft.jitter.transformImage(entry.image[0], { w: 150, ar: "1:1", m: "fit", fm: "gif", q: 10 }) %}
 
 {# For a faster template render build the API URL instead #}
+{# If you have configured Jitter to use CDN URLs this value will switch to the CDN URL after the image has been transformed #}
 {% set transformedImageUrl = craft.jitter.url(entry.image[0], { w: 150, ar: "1:1", m: "fit", fm: "gif", q: 10 }) %}
 
 <img 
