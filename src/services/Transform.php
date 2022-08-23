@@ -35,37 +35,8 @@ class Transform extends Component
         if (!empty($settings))
         {
             $dirname = $this->getTempPath();
-            if (\file_exists($dirname))
-            {
-                $s3 = $this->connectToS3($settings);
-                $files = \scandir($dirname);
-                foreach ($files as $key => $value)
-                {
-                    if ($value != '.' && $value != '..')
-                    {
-                        $segments = explode("-", $value);
-                        if ($segments[0] == $uid)
-                        {
-                            $s3Key = $value;
-                            if (isset($settings['folder']))
-                            {
-                                $s3Key = $settings['folder'] . "/" . $value;
-                            }
-                            $s3->deleteObject([
-                                'Bucket' => $settings['bucket'],
-                                'Key'    => $s3Key,
-                            ]);
-                            $filePath = FileHelper::normalizePath($dirname . "/" . $value);
-                            \unlink($filePath);
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            $publicDir = FileHelper::normalizePath(Yii::getAlias('@webroot') . "/jitter");
-            $files = \scandir($publicDir);
+            $s3 = $this->connectToS3($settings);
+            $files = \scandir($dirname);
             foreach ($files as $key => $value)
             {
                 if ($value != '.' && $value != '..')
@@ -73,7 +44,33 @@ class Transform extends Component
                     $segments = explode("-", $value);
                     if ($segments[0] == $uid)
                     {
-                        $filePath = FileHelper::normalizePath($publicDir . "/" . $value);
+                        $s3Key = $value;
+                        if (isset($settings['folder']))
+                        {
+                            $s3Key = $settings['folder'] . "/" . $value;
+                        }
+                        $s3->deleteObject([
+                            'Bucket' => $settings['bucket'],
+                            'Key'    => $s3Key,
+                        ]);
+                        $filePath = FileHelper::normalizePath($dirname . "/" . $value);
+                        \unlink($filePath);
+                    }
+                }
+            }
+        }
+        else
+        {
+            $dirname = $this->getPublicPath();
+            $files = \scandir($dirname);
+            foreach ($files as $key => $value)
+            {
+                if ($value != '.' && $value != '..')
+                {
+                    $segments = explode("-", $value);
+                    if ($segments[0] == $uid)
+                    {
+                        $filePath = FileHelper::normalizePath($dirname . "/" . $value);
                         \unlink($filePath);
                     }
                 }
@@ -339,7 +336,8 @@ class Transform extends Component
     private function getTempPath(): string
 	{
 		$path = FileHelper::normalizePath(Craft::$app->path->runtimePath . '/jitter');
-		if (!file_exists($path)) {
+        if (!file_exists($path))
+        {
 			mkdir($path);
 		}
 		return $path;
