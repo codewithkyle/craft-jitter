@@ -15,6 +15,7 @@ use codewithkyle\jitter\variables\JitterVariable;
 
 use Craft;
 use craft\base\Plugin;
+use craft\elements\Asset;
 use craft\services\Plugins;
 use craft\events\PluginEvent;
 use craft\web\UrlManager;
@@ -97,6 +98,16 @@ class Jitter extends Plugin
                         }
                     }
                 ];
+            }
+        );
+
+        // Register delete event logic
+        Event::on(
+            Asset::class,
+            Asset::EVENT_BEFORE_DELETE,
+            function ($e) {
+                $asset = $e->sender;
+                Jitter::getInstance()->transform->clearImageTransforms($asset);
             }
         );
 
