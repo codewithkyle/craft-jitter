@@ -241,7 +241,7 @@ class Transform extends Component
         $assetOrId = $asset;
         if (is_null($assetOrId))
         {
-            if (issset($params["id"]))
+            if (isset($params["id"]))
             {
                 $assetOrId = $params["id"];
             }
@@ -309,7 +309,7 @@ class Transform extends Component
         }
         JitterCore::TransformImage($tempImage, $transform, $resizeOn);
 
-        $mime = \mime_content_type($tempImage),
+        $mime = \mime_content_type($tempImage);
         $this->cacheImage($settings, $key, $tempImage, $mime);
 
         $file = [

@@ -2,7 +2,7 @@
     "name": "codewithkyle/jitter",
     "description": "A just in time image transformation service.",
     "type": "craft-plugin",
-    "version": "2.3.0",
+    "version": "2.3.1",
     "keywords": [
         "craft",
         "cms",
