@@ -472,7 +472,7 @@ class Transform extends Component
         $id = null;
         if ($assetOrId instanceof Asset)
         {
-            $id = $asset->id;
+            $id = $assetOrId->id;
         }
         else
         {
