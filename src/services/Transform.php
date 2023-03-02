@@ -343,7 +343,7 @@ class Transform extends Component
 		return $path;
 	}
 
-    private function connectToS3(array $settings): S3Client
+    private function connectToS3(?array $settings): S3Client
     {
         $conn = [
             'credentials' => [
@@ -385,7 +385,7 @@ class Transform extends Component
         return $path;
     }
 
-    private function getCachedImage(array $settings, string $key): array
+    private function getCachedImage(?array $settings, string $key): array
     {
         $response = [];
         if (!empty($settings))
@@ -421,7 +421,7 @@ class Transform extends Component
         return (array)$response;
     }
 
-    private function checkCache(array $settings, string $key): bool
+    private function checkCache(?array $settings, string $key): bool
     {
         $isCached = false;
         if (!empty($settings))
