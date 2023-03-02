@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+## [2.3.1] - 2023-03-02
+
+### Fixed
+
+- `checkCache()` null array bug ([#25](https://github.com/codewithkyle/craft-jitter/issues/25))
+
 ## [2.3.0] - 2022-08-23
 
 ### Added
