@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
-## [2.3.1] - 2023-03-02
+## [2.3.3] - 2023-03-02
 
 ### Fixed
 
@@ -155,7 +155,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - delete local files
     - delete S3 files
 
-[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/codewithkyle/craft-jitter/compare/v2.3.3...HEAD
+[2.3.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.3.0...v2.3.3
 [2.3.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/codewithkyle/craft-jitter/compare/v2.0.0...v2.1.0
