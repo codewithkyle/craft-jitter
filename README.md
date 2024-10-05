@@ -6,8 +6,9 @@ Jitter is a just in time image transformation plugin for Craft CMS. The API is b
 
 This plugin requires [ImageMagick](https://imagemagick.org/index.php) and the following versions of PHP and Craft CMS:
 
-- Craft CMS 4.0.0+ with PHP 8+ (Jitter v2.0+, active)
-- Craft CMS 3.0.0+ with PHP 7.2+ (Jitter v1.x, unsupported)
+- Craft CMS 5 with PHP 8 (Jitter v2.0, active)
+- Craft CMS 4 with PHP 8 (Jitter v2.0, maintenance)
+- Craft CMS 3 with PHP 7.2+ (Jitter v1.x, unsupported)
 
 ## Installation
 
